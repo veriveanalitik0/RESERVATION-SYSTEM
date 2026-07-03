@@ -1,0 +1,97 @@
+# Kuveyt Türk AI Lab — Randevu Sistemi · Dockerize (#2)
+#
+# Tek komut: `docker compose up` → postgres + backend + frontend ayağa kalkar.
+# Dev odaklı: kaynak volume mount + hot-reload (backend tsx watch, frontend vite HMR).
+#
+# Servisler:
+#  - postgres : PostgreSQL 16 (named volume ile kalıcı), healthcheck'li.
+#  - backend  : Express + tsx watch (4000). DATABASE_URL ile pg'ye bağlanır.
+#  - frontend : Vite dev (5173), /api'yi backend'e proxy'ler (VITE_PROXY_TARGET).
+#
+# Secret'lar env'den gelir (aşağıdaki değerler DEV içindir; prod'da .env/secret store kullanın).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: klab-postgres
+    environment:
+      POSTGRES_USER: klab
+      POSTGRES_PASSWORD: klab_dev_password
+      POSTGRES_DB: klab
+      TZ: Europe/Istanbul
+    ports:
+      - '5432:5432' # yerel hata ayıklama için (psql vs.)
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U klab -d klab']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: klab-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # İlk-boot: şema (idempotent) + demo seed yükle, ardından dev sunucuyu başlat.
+    # db:init idempotenttir (şema CREATE TABLE IF NOT EXISTS; seed "zaten yüklü" ise
+    # atlar) → fresh pg volume'da demo verisi otomatik gelir, dolu volume'da güvenle
+    # atlanır. Böylece tek `docker compose up` sonrası demoda veri hazır olur.
+    command: sh -c "npm run db:init && npm run dev"
+    # Görsel sağlayıcı anahtarları (IMAGE_PROVIDER / HUGGINGFACE_API_KEY /
+    # POLLINATIONS_TOKEN / GEMINI_API_KEY) backend/.env'den okunur. env_file,
+    # aşağıdaki `environment` bloğundan ÖNCE yüklenir; kritik dev override'ları
+    # (DATABASE_URL→@postgres, CSRF_SECRET) environment'ta kaldığından onlar kazanır.
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: '4000'
+      TZ: Europe/Istanbul
+      # PostgreSQL bağlantısı — container içinde host 'postgres' (localhost değil).
+      DATABASE_URL: postgres://klab:klab_dev_password@postgres:5432/klab
+      FRONTEND_ORIGIN: http://localhost:5173
+      CSRF_SECRET: docker_dev_csrf_secret_min_32_chars_change_in_prod
+      # JWT anahtarları volume-mount edilen keys/ dizininden okunur.
+      USER_JWT_PRIVATE_KEY_PATH: ./keys/user_private.pem
+      USER_JWT_PUBLIC_KEY_PATH: ./keys/user_public.pem
+      ADMIN_JWT_PRIVATE_KEY_PATH: ./keys/admin_private.pem
+      ADMIN_JWT_PUBLIC_KEY_PATH: ./keys/admin_public.pem
+      # IMAGE_PROVIDER ayarlanmamışsa huggingface'e düş (env_file boşsa).
+      IMAGE_PROVIDER: ${IMAGE_PROVIDER:-huggingface}
+    ports:
+      - '4000:4000'
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules # linux-native modüller host'unkini gölgelemesin
+      - ./shared:/shared # paylaşılan tip paketi (@klab/shared) — tsx için
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: klab-frontend
+    depends_on:
+      - backend
+    environment:
+      # Vite dev sunucusu /api'yi bu adrese proxy'ler (container ağı).
+      VITE_PROXY_TARGET: http://backend:4000
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+      - ./shared:/shared
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  backend_node_modules:
+  frontend_node_modules:

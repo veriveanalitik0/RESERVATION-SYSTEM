@@ -1,0 +1,75 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production
+build/
+dist/
+
+# Environment & Secrets (CRITICAL — data_security.md §1)
+.env
+.env.local
+.env.production
+.env.prod
+*.pem
+*.key
+secrets.json
+backend/keys/*.pem
+backend/keys/*.key
+!backend/keys/.gitkeep
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+backend/data/
+# Sunucu tarafında saklanan üretilmiş görseller (visual proxy/store — veri-yönetişimi)
+backend/data/visuals/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
+frontend/playwright/.cache/
+
+# Local reference images
+A2/
+
+# Editor temp
+*.bak
+
+# Claude Code local settings + worktrees
+.claude/settings.local.json
+.claude/worktrees/
+
+# Makine-yerel compose ayarları (ör. port çakışması override'ı) — commit edilmez
+docker-compose.override.yml
+
+# Kök dizine bırakılan geçici görseller/ekran görüntüleri — repo'ya girmez
+/*.png
+/*.jpg
+/*.jpeg

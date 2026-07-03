@@ -1,0 +1,222 @@
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { api, clearCsrfCache } from '../services/api';
+import { useToast } from '../components/Toast';
+
+/**
+ * Parola sıfırlama sayfası — e-posta linkindeki ?token= ile gelir.
+ * Backend §4 parola politikasını uygular; UI'da canlı güç göstergesi var.
+ */
+export default function ResetPassword() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const token = searchParams.get('token') ?? '';
+
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    clearCsrfCache();
+  }, []);
+
+  const checks = {
+    length: password.length >= 12,
+    upper: /[A-Z]/.test(password),
+    lower: /[a-z]/.test(password),
+    digit: /[0-9]/.test(password),
+    special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
+  };
+  const score = Object.values(checks).filter(Boolean).length;
+  const allValid = score === 5;
+  const matches = password.length > 0 && password === passwordConfirm;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (loading) return;
+    setError('');
+    if (!allValid) {
+      setError('Parola tüm kriterleri karşılamalı.');
+      return;
+    }
+    if (!matches) {
+      setError('Parolalar eşleşmiyor.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await api.resetPassword(token, password, passwordConfirm);
+      toast.push('success', 'Parolan güncellendi. Yeni parolanla giriş yapabilirsin.');
+      navigate('/login', { replace: true });
+    } catch (err) {
+      setError((err as Error).message || 'Sıfırlama başarısız.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-kt-green-950">
+      {/* ========== ARKAPLAN — Giriş ekranı ile aynı ========== */}
+      <div className="absolute inset-0">
+        <img
+          src="/ai-lab-bg.jpg"
+          alt=""
+          aria-hidden="true"
+          className="w-full h-full object-cover animate-ken-burns"
+          loading="eager"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-kt-green-950/65 via-kt-green-900/55 to-kt-green-950/80" />
+      </div>
+      <div className="absolute inset-0 bg-neural-grid-dark opacity-25 pointer-events-none" />
+      <div className="absolute inset-0 bg-ai-mesh animate-mesh-shift pointer-events-none" />
+      <div className="absolute top-1/4 left-10 w-96 h-96 bg-kt-gold-400/25 rounded-full blur-[120px] animate-float-slow pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-kt-violet-500/20 rounded-full blur-[140px] animate-float-medium pointer-events-none" />
+
+      <header className="relative z-10 px-6 md:px-10 py-6 flex items-center justify-between">
+        <Link to="/" aria-label="Ana sayfa" className="relative inline-block group">
+          <div className="absolute inset-0 -m-8 bg-kt-gold-400/25 rounded-full blur-[60px] animate-glow-pulse pointer-events-none" />
+          <div className="absolute inset-0 -m-4 bg-kt-green-600/30 rounded-full blur-[36px] pointer-events-none" />
+          <div className="relative aspect-[4/3] h-16 md:h-32">
+            <img
+              src="/ai-lab-logo-hero.png"
+              alt="Kuveyt Türk Yapay Zeka Laboratuvarı"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[60.9%] h-[215%] max-w-none w-auto object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.02]"
+              loading="eager"
+              decoding="async"
+            />
+          </div>
+        </Link>
+        <Link
+          to="/login"
+          className="text-sm font-semibold text-white/80 hover:text-kt-gold-300 transition-colors backdrop-blur-sm bg-black/20 px-3 py-1.5 rounded-lg border border-white/10"
+        >
+          ← Girişe dön
+        </Link>
+      </header>
+
+      <main className="relative z-10 flex-1 flex items-center justify-center px-6 py-8">
+        <div className="w-full max-w-md animate-slide-up">
+          <div className="rounded-2xl p-8 bg-white/95 backdrop-blur-md shadow-2xl border border-white/40">
+            <div className="mb-6">
+              <h1 className="text-3xl font-extrabold text-kt-green-900 mb-1.5">Yeni parola belirle</h1>
+              <p className="text-sm text-kt-gray-500">
+                Güçlü bir parola seç — en az 12 karakter ve karmaşık.
+              </p>
+            </div>
+
+            {!token ? (
+              <div className="space-y-4">
+                <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-800">
+                  Geçersiz veya eksik sıfırlama bağlantısı. Lütfen e-postandaki bağlantıyı
+                  yeniden kullan ya da yeni bir talep oluştur.
+                </div>
+                <Link to="/forgot-password" className="btn-primary w-full block text-center">
+                  Yeni bağlantı iste
+                </Link>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">
+                <div>
+                  <label htmlFor="password" className="label">
+                    Yeni parola
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    className="input"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                    placeholder="En az 12 karakter, karmaşık"
+                    maxLength={128}
+                    disabled={loading}
+                  />
+                  {password.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div
+                            key={i}
+                            className={`h-1 flex-1 rounded-full transition-colors ${
+                              i <= score
+                                ? score === 5
+                                  ? 'bg-kt-green-500'
+                                  : score >= 3
+                                    ? 'bg-kt-gold-400'
+                                    : 'bg-red-400'
+                                : 'bg-kt-gray-200'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <ul className="text-xs space-y-0.5 text-kt-gray-600">
+                        <li className={checks.length ? 'text-kt-green-700' : ''}>
+                          {checks.length ? '✓' : '○'} En az 12 karakter
+                        </li>
+                        <li className={checks.upper ? 'text-kt-green-700' : ''}>
+                          {checks.upper ? '✓' : '○'} Büyük harf
+                        </li>
+                        <li className={checks.lower ? 'text-kt-green-700' : ''}>
+                          {checks.lower ? '✓' : '○'} Küçük harf
+                        </li>
+                        <li className={checks.digit ? 'text-kt-green-700' : ''}>
+                          {checks.digit ? '✓' : '○'} Rakam
+                        </li>
+                        <li className={checks.special ? 'text-kt-green-700' : ''}>
+                          {checks.special ? '✓' : '○'} Özel karakter (!@#$ vb.)
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="passwordConfirm" className="label">
+                    Yeni parola (tekrar)
+                  </label>
+                  <input
+                    id="passwordConfirm"
+                    type="password"
+                    className="input"
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                    placeholder="••••••••••••"
+                    maxLength={128}
+                    disabled={loading}
+                  />
+                  {passwordConfirm.length > 0 && !matches && (
+                    <p className="text-xs text-red-600 mt-1">Parolalar eşleşmiyor.</p>
+                  )}
+                </div>
+
+                {error && <p className="text-xs text-red-600">{error}</p>}
+
+                <button
+                  type="submit"
+                  disabled={loading || !allValid || !matches}
+                  className="btn-primary w-full"
+                >
+                  {loading ? 'Güncelleniyor...' : 'Parolayı güncelle'}
+                </button>
+              </form>
+            )}
+
+            <div className="mt-6 pt-6 border-t border-kt-gray-100 text-center">
+              <p className="text-sm text-kt-gray-600">
+                <Link to="/login" className="font-semibold text-kt-green-700 hover:text-kt-gold-600">
+                  Giriş sayfasına dön →
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

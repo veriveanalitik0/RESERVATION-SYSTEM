@@ -1,0 +1,199 @@
+# Kuveyt Türk AI Lab — Randevu Sistemi · PRODUCTION stack.
+# Dev stack'ten (docker-compose.yml) tamamen AYRI. Çalıştırma:
+#   cp .env.prod.example .env.prod && <değerleri doldur>
+#   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+#
+# Dev'den farklar:
+#  - Multi-stage prod image'ler (derlenmiş JS / nginx static), dev watch YOK.
+#  - Secret'lar zorunlu env'den (${VAR:?...}) — hardcode YOK, eksikse fail-fast.
+#  - postgres portu DIŞA AÇILMAZ (yalnız iç ağ). Sadece frontend :80 dışarı.
+#  - JWT anahtarları image'e gömülmez; salt-okunur volume ile mount edilir.
+#
+# DB şema/seed: ilk kurulumda bir kez migration gerekir (schema.pg.sql).
+# Bkz. docs/ — bu compose uygulamayı çalıştırır, migration ayrı operasyonel adımdır.
+
+# Ayrı proje adı — dev stack (docker-compose.yml, proje adı 'randevu-takip') ile
+# container/volume/network ÇAKIŞMASIN. Aksi halde `prod down` dev'i de söker.
+name: klab-randevu-prod
+
+# Ortak log rotasyonu — sınırsız json-file büyümesi disk doldurur.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '20m'
+    max-file: '5'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: klab-postgres-prod
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER gerekli}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD gerekli}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB gerekli}
+      TZ: ${TZ:-Europe/Istanbul}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    logging: *default-logging
+    # Temiz kapanış için checkpoint süresi tanı (varsayılan 10s yetmeyebilir).
+    stop_grace_period: 60s
+    # Sertleştirme: ayrıcalık yükseltme yok. (cap_drop ALL koymuyoruz — postgres
+    # init aşaması CHOWN/SETUID/SETGID gibi cap'lere ihtiyaç duyar.)
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    # Port DIŞA AÇILMAZ — yalnız compose iç ağından erişilir.
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.prod
+    image: klab-backend:prod
+    container_name: klab-backend-prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: '4000'
+      TZ: ${TZ:-Europe/Istanbul}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # Paketli (compose-içi) postgres TLS sunmaz → varsayılan kapalı. Managed/uzak
+      # Postgres + TLS için .env.prod'da PGSSL'i boş bırak (veya DATABASE_URL'a sslmode ekle).
+      PGSSL: ${PGSSL:-disable}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:?FRONTEND_ORIGIN gerekli (örn https://randevu.klab.example)}
+      CSRF_SECRET: ${CSRF_SECRET:?CSRF_SECRET gerekli (min 32 karakter)}
+      # At-rest şifreleme (admin TOTP secret) — boşsa CSRF_SECRET'tan türetilir.
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      USER_JWT_PRIVATE_KEY_PATH: ./keys/user_private.pem
+      USER_JWT_PUBLIC_KEY_PATH: ./keys/user_public.pem
+      ADMIN_JWT_PRIVATE_KEY_PATH: ./keys/admin_private.pem
+      ADMIN_JWT_PUBLIC_KEY_PATH: ./keys/admin_public.pem
+      IMAGE_PROVIDER: ${IMAGE_PROVIDER:-huggingface}
+      # Hugging Face ücretsiz token (huggingface.co/settings/tokens) — yalnız server-side.
+      HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY:-}
+      # Alternatif sağlayıcılar:
+      POLLINATIONS_TOKEN: ${POLLINATIONS_TOKEN:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Prometheus scrape erişimi (boşsa /api/metrics prod'da kapalı kalır).
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      # Embedding modeli cache'i node_modules yerine yazılabilir data volume'una.
+      MODEL_CACHE_DIR: /app/data/models
+      # Observability (OpenTelemetry) — endpoint boşsa trace exporter kapalı.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-klab-randevu}
+    volumes:
+      # JWT anahtarları — image'e gömülmez, salt-okunur mount (secret yönetimi).
+      - ./backend/keys:/app/keys:ro
+      # Üretilen görseller + model cache kalıcı (node-yazılabilir data dizini).
+      - appdata:/app/data
+    healthcheck:
+      # Node 22 yerleşik fetch ile DB-bağımlı readiness probe (ek araç gerekmez).
+      test:
+        - CMD-SHELL
+        - node -e "fetch('http://127.0.0.1:4000/api/readiness').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+    logging: *default-logging
+    # Graceful shutdown zinciri (SSE kapat → DB pool kapat) 15s
+    # force-timer'lı; compose biraz daha tanısın.
+    stop_grace_period: 30s
+    # Sertleştirme: image zaten `USER node` (non-root) ve yalnız ayrıcalıksız
+    # 4000 portunu dinler → hiçbir capability gerekmez.
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          # In-process embedding modeli (transformers) bellek tüketir — host'taki
+          # postgres'i OOM'a sürüklemesin.
+          memory: 2g
+    # Port DIŞA AÇILMAZ — nginx (frontend) /api'yi iç ağdan proxy'ler.
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.prod
+    image: klab-frontend:prod
+    container_name: klab-frontend-prod
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      # Container içi non-root nginx 8080 dinler; host portu (80) ona map'lenir.
+      - '${HTTP_PORT:-80}:8080'
+    healthcheck:
+      # busybox wget (nginx:alpine) ile statik index erişimi (ayrıcalıksız 8080).
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    logging: *default-logging
+    # Sertleştirme: ayrıcalık yükseltme yok + tüm Linux capability'leri düşür
+    # (nginx-unprivileged ayrıcalıksız portta çalıştığı için cap gerekmez).
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  # ============================================================
+  # YEDEKLEME — pg_dump cron sidecar'ı.
+  # Zamanlanmış mantıksal yedek (custom format) + saklama politikası.
+  # Yedekler 'pgbackups' volume'unda; off-site kopya İÇİN bu volume'u
+  # harici depoya senkronlayın (runbook: docs/backup-restore-runbook.md).
+  # ============================================================
+  postgres-backup:
+    image: prodrigestivill/postgres-backup-local:16
+    container_name: klab-postgres-backup-prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB gerekli}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER gerekli}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD gerekli}
+      POSTGRES_EXTRA_OPTS: '--clean --if-exists'
+      TZ: ${TZ:-Europe/Istanbul}
+      # Her gece 02:30 (TR) — saklama: 7 günlük + 4 haftalık + 6 aylık.
+      SCHEDULE: '30 2 * * *'
+      BACKUP_KEEP_DAYS: '7'
+      BACKUP_KEEP_WEEKS: '4'
+      BACKUP_KEEP_MONTHS: '6'
+      HEALTHCHECK_PORT: '8080'
+    volumes:
+      - pgbackups:/backups
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1']
+      interval: 60s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  pgdata:
+  appdata:
+  pgbackups:

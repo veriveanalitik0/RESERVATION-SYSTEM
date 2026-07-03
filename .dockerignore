@@ -1,0 +1,17 @@
+# Production build context = repo kökü. Aşağıdakiler image'e GİRMEZ.
+**/node_modules
+**/dist
+backend/data
+backend/keys          # JWT private key'ler — image'e gömülmez, runtime'da mount edilir
+**/*.log
+**/.env
+**/.env.local
+**/.env.prod
+.git
+.github
+**/coverage
+**/test-results
+**/playwright-report
+**/.DS_Store
+docs
+*.md

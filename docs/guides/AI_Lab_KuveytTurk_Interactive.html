@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Lab — Vibe Coding Yönetişim Kılavuzu | KuveytTürk</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* KuveytTürk Green Palette */
+  --kt-green:        #0a4d2e;
+  --kt-green2:       #0f6b40;
+  --kt-green3:       #1a8a52;
+  --kt-green4:       #22a865;
+  --kt-green5:       #34c97e;
+  --kt-green6:       #a7f3d0;
+  --kt-green7:       #d1fae5;
+  --kt-green8:       #ecfdf5;
+  /* Gold accent */
+  --kt-gold:         #b8860b;
+  --kt-gold2:        #d4a017;
+  --kt-gold3:        #f0c040;
+  --kt-gold4:        #fef3c7;
+  /* Neutrals */
+  --kt-dark:         #0a1a0f;
+  --kt-dark2:        #0f2a18;
+  --kt-dark3:        #152f1e;
+  --kt-surface:      #0f2a18;
+  --kt-surface2:     #163622;
+  --kt-surface3:     #0a1a0f;
+  /* Text */
+  --text:            #f0fdf4;
+  --text2:           #bbf7d0;
+  --text3:           #86efac;
+  /* Borders */
+  --border:          rgba(34,168,101,.15);
+  --border2:         rgba(34,168,101,.28);
+  /* Semantic */
+  --success:         #22c55e;
+  --warning:         #f59e0b;
+  --danger:          #ef4444;
+  --info:            #3b82f6;
+  --purple:          #8b5cf6;
+  /* Radii & transitions */
+  --r:8px;--r2:12px;--r3:16px;
+  --tr:all .22s cubic-bezier(.4,0,.2,1);
+}
+
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--kt-surface3);color:var(--text);line-height:1.6;min-height:100vh}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,26,15,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 2rem}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:1.5rem;height:60px}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo img{height:28px;filter:brightness(0) invert(1);opacity:.92}
+.nav-divider{width:1px;height:22px;background:var(--border2)}
+.nav-title{font-size:13px;font-weight:500;color:var(--text3);white-space:nowrap}
+.nav-links{display:flex;gap:4px;margin-left:auto}
+.nav-link{font-size:13px;color:var(--text3);padding:5px 11px;border-radius:6px;cursor:pointer;transition:var(--tr);text-decoration:none;border:none;background:none}
+.nav-link:hover,.nav-link.active{color:var(--text);background:rgba(34,168,101,.1)}
+
+/* ── SECTIONS ── */
+.section{max-width:1200px;margin:0 auto;padding:4rem 2rem}
+.section-head{margin-bottom:2.5rem}
+.section-tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--kt-green4);margin-bottom:.75rem}
+.section-tag::before{content:'';width:20px;height:2px;background:var(--kt-green4);border-radius:2px}
+h1.big{font-size:clamp(28px,4vw,44px);font-weight:700;line-height:1.2;color:var(--text)}
+h1.big span{color:var(--kt-green5)}
+h2.sec{font-size:22px;font-weight:600;color:var(--text);margin-bottom:.4rem}
+p.sec-desc{color:var(--text2);font-size:15px;max-width:640px}
+
+/* ── HERO ── */
+#hero{min-height:92vh;display:flex;align-items:center;position:relative;overflow:hidden;background:var(--kt-surface3)}
+.hero-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.hero-svg-bg{position:absolute;inset:0;width:100%;height:100%;opacity:.07}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(34,168,101,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(34,168,101,.07) 1px,transparent 1px);background-size:56px 56px}
+.hero-glow{position:absolute;top:-160px;right:-140px;width:650px;height:650px;background:radial-gradient(circle,rgba(34,168,101,.1) 0%,transparent 68%)}
+.hero-glow2{position:absolute;bottom:-100px;left:-80px;width:400px;height:400px;background:radial-gradient(circle,rgba(184,134,11,.06) 0%,transparent 70%)}
+.hero-content{position:relative;max-width:1200px;margin:0 auto;padding:0 2rem;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.hero-left{}
+.hero-kicker{display:inline-flex;align-items:center;gap:8px;background:rgba(34,168,101,.1);border:1px solid rgba(34,168,101,.28);color:var(--kt-green5);font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;margin-bottom:1.5rem;letter-spacing:.4px}
+.hero-kicker-dot{width:6px;height:6px;border-radius:50%;background:var(--kt-green5);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hero-title{font-size:clamp(30px,4.5vw,52px);font-weight:700;line-height:1.12;margin-bottom:1.1rem}
+.hero-title span{color:var(--kt-green5)}
+.hero-sub{font-size:16px;color:var(--text2);line-height:1.65;margin-bottom:2.5rem}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:500;padding:10px 20px;border-radius:var(--r);cursor:pointer;transition:var(--tr);text-decoration:none;border:none;font-family:inherit}
+.btn-primary{background:var(--kt-green3);color:#fff}
+.btn-primary:hover{background:var(--kt-green2);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{background:rgba(34,168,101,.07);color:var(--text)}
+.hero-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-top:3rem}
+.hero-stat{background:var(--kt-surface2);padding:1.1rem 1.25rem;text-align:center}
+.hero-stat-num{font-size:30px;font-weight:700;color:var(--kt-green5)}
+.hero-stat-label{font-size:11px;color:var(--text3);margin-top:2px}
+/* right side: agent visualisation */
+.hero-right{display:flex;justify-content:center;align-items:center}
+.agent-viz{width:100%;max-width:460px;position:relative}
+
+/* ── PIPELINE VIZ (hero right) ── */
+.pv-wrap{width:100%;aspect-ratio:1/1.05;position:relative}
+.pv-wrap svg{width:100%;height:100%}
+
+/* ── PHASE FLOW ── */
+#flow{background:var(--kt-surface2)}
+.phase-nav{display:flex;gap:0;margin-bottom:2.5rem;border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.phase-btn{flex:1;padding:14px 6px;font-size:12px;font-weight:500;color:var(--text3);background:transparent;border:none;cursor:pointer;transition:var(--tr);font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.phase-btn:not(:last-child)::after{content:'';position:absolute;right:0;top:20%;height:60%;width:1px;background:var(--border)}
+.phase-btn.active{background:rgba(34,168,101,.1);color:var(--text)}
+.phase-btn.active .ph-num{background:var(--kt-green3);color:#fff}
+.phase-btn.done .ph-num{background:var(--success);color:#fff}
+.phase-btn.done{color:var(--text3)}
+.ph-num{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;transition:var(--tr)}
+.phase-content{display:none;animation:fadeIn .3s ease}
+.phase-content.visible{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.phase-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.phase-meta{flex:1}
+.phase-title{font-size:24px;font-weight:700;color:var(--text);margin-bottom:.4rem}
+.phase-desc{color:var(--text2);font-size:14px;max-width:580px}
+.phase-badge{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap}
+.badge-green{background:rgba(34,168,101,.14);color:var(--kt-green5);border:1px solid rgba(34,168,101,.25)}
+.badge-amber{background:rgba(245,158,11,.13);color:#fbbf24;border:1px solid rgba(245,158,11,.25)}
+.badge-blue{background:rgba(59,130,246,.13);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
+.badge-purple{background:rgba(139,92,246,.13);color:#a78bfa;border:1px solid rgba(139,92,246,.25)}
+.phase-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.phase-card{background:var(--kt-surface3);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem}
+.pc-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.75rem}
+.pc-list{list-style:none}
+.pc-list li{font-size:13px;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:8px}
+.pc-list li:last-child{border-bottom:none}
+.pc-list li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--kt-green4);margin-top:6px;flex-shrink:0}
+.gate-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:var(--kt-surface3);border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1.1rem;margin-bottom:.5rem;cursor:pointer;transition:var(--tr)}
+.gate-row:hover{border-color:var(--border2);background:rgba(34,168,101,.04)}
+.gate-left{display:flex;align-items:center;gap:.75rem}
+.gate-icon{width:34px;height:34px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.gi-green{background:rgba(34,168,101,.13)}
+.gi-red{background:rgba(239,68,68,.13)}
+.gi-amber{background:rgba(245,158,11,.13)}
+.gi-purple{background:rgba(139,92,246,.13)}
+.gi-blue{background:rgba(59,130,246,.13)}
+.gate-name{font-size:13px;font-weight:500;color:var(--text)}
+.gate-agent{font-size:12px;color:var(--text3)}
+.gate-status{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.gs-auto{background:rgba(34,168,101,.12);color:var(--kt-green5)}
+.gs-human{background:rgba(139,92,246,.12);color:#a78bfa}
+.gs-block{background:rgba(239,68,68,.12);color:#fca5a5}
+.gate-chevron{color:var(--text3);font-size:12px;transition:transform .2s;flex-shrink:0}
+.gate-detail{display:none;background:rgba(34,168,101,.03);border:1px solid rgba(34,168,101,.14);border-radius:var(--r);padding:.9rem 1.1rem;margin-bottom:.5rem;margin-top:-3px;animation:fadeIn .2s ease}
+.gate-detail.open{display:block}
+.gd-row{display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:.6rem}
+.gd-item{flex:1;min-width:130px}
+.gd-key{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.gd-val{font-size:13px;color:var(--text2)}
+.gd-block{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18);border-radius:6px;padding:7px 11px;font-size:12px;color:#fca5a5;display:flex;align-items:center;gap:7px}
+.phase-nav-btns{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.25rem}
+
+/* ── AGENTS ── */
+#agents{background:var(--kt-surface3)}
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem}
+.agent-card{background:var(--kt-surface2);border:1px solid var(--border);border-radius:var(--r2);padding:1.4rem;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden}
+.agent-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transition:var(--tr)}
+.agent-card.ac-green::before{background:var(--kt-green3)}
+.agent-card.ac-amber::before{background:var(--warning)}
+.agent-card.ac-purple::before{background:var(--purple)}
+.agent-card.ac-red::before{background:var(--danger)}
+.agent-card.ac-teal::before{background:#0d9488}
+.agent-card.ac-gold::before{background:var(--kt-gold3)}
+.agent-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.agent-card.expanded{border-color:var(--border2)}
+.agent-head{display:flex;align-items:center;gap:.75rem;margin-bottom:.9rem}
+.agent-icon{width:38px;height:38px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.ai-green{background:rgba(34,168,101,.13)}
+.ai-amber{background:rgba(245,158,11,.13)}
+.ai-purple{background:rgba(139,92,246,.13)}
+.ai-red{background:rgba(239,68,68,.13)}
+.ai-teal{background:rgba(13,148,136,.13)}
+.ai-gold{background:rgba(212,160,23,.13)}
+.agent-name{font-size:14px;font-weight:600;color:var(--text)}
+.agent-trigger{font-size:11px;color:var(--text3)}
+.agent-desc{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:.9rem}
+.agent-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.9rem}
+.tag{font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)}
+.agent-block{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.16);border-radius:6px;padding:7px 11px;font-size:12px;color:#fca5a5;display:flex;align-items:center;gap:7px;margin-bottom:.9rem}
+.agent-expand{display:none;border-top:1px solid var(--border);padding-top:.9rem;margin-top:.4rem;animation:fadeIn .2s ease}
+.agent-card.expanded .agent-expand{display:block}
+.agent-expand-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.4rem}
+.agent-rule{display:flex;gap:7px;font-size:12px;color:var(--text2);padding:2px 0;align-items:flex-start}
+.agent-rule::before{content:'→';color:var(--kt-green4);flex-shrink:0;margin-top:1px}
+.agent-md-ref{display:inline-flex;align-items:center;gap:5px;background:rgba(34,168,101,.09);border:1px solid rgba(34,168,101,.2);color:var(--kt-green5);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;margin:2px;font-family:monospace}
+.expand-hint{font-size:10px;color:var(--text3);text-align:right;margin-top:.4rem}
+
+/* ── STANDARDS ── */
+#standards{background:var(--kt-surface2)}
+.standards-grid{display:grid;grid-template-columns:1fr 2fr;gap:1.5rem;align-items:start}
+.std-list{display:flex;flex-direction:column;gap:.5rem}
+.std-btn{background:var(--kt-surface3);border:1px solid var(--border);border-radius:var(--r);padding:.85rem .9rem;cursor:pointer;transition:var(--tr);text-align:left;font-family:inherit;display:flex;align-items:center;gap:.75rem}
+.std-btn:hover{border-color:var(--border2)}
+.std-btn.active{border-color:var(--kt-green3);background:rgba(34,168,101,.06)}
+.std-code{font-size:10px;font-weight:700;color:var(--kt-green4);font-family:monospace;min-width:88px}
+.std-name{font-size:12px;font-weight:500;color:var(--text)}
+.std-detail{background:var(--kt-surface3);border:1px solid var(--border);border-radius:var(--r2);padding:1.4rem}
+.std-detail-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.1rem;padding-bottom:1.1rem;border-bottom:1px solid var(--border)}
+.std-detail-icon{width:46px;height:46px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;background:rgba(34,168,101,.1)}
+.std-detail-code{font-size:12px;font-weight:700;color:var(--kt-green4);font-family:monospace;margin-bottom:4px}
+.std-detail-name{font-size:17px;font-weight:600;color:var(--text)}
+.std-rules{margin-top:.9rem}
+.std-rule-item{display:flex;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);align-items:flex-start}
+.std-rule-item:last-child{border-bottom:none}
+.std-rule-item::before{content:'✓';color:var(--kt-green4);font-weight:700;flex-shrink:0;margin-top:1px}
+.std-agents-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-top:1.1rem;margin-bottom:.4rem}
+
+/* ── QUICK CHECK ── */
+#quickcheck{background:var(--kt-surface3)}
+.qc-container{max-width:700px;margin:0 auto}
+.qc-step{display:none;animation:fadeIn .3s ease}
+.qc-step.active{display:block}
+.qc-question{font-size:19px;font-weight:600;color:var(--text);margin-bottom:1.4rem}
+.qc-options{display:grid;gap:.65rem}
+.qc-option{background:var(--kt-surface2);border:1px solid var(--border);border-radius:var(--r2);padding:1.15rem 1.35rem;cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:1rem}
+.qc-option:hover{border-color:var(--kt-green3);background:rgba(34,168,101,.05)}
+.qc-option.selected{border-color:var(--kt-green3);background:rgba(34,168,101,.08)}
+.qc-opt-icon{width:42px;height:42px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;background:rgba(255,255,255,.05)}
+.qc-opt-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px}
+.qc-opt-sub{font-size:12px;color:var(--text3)}
+.qc-result{background:var(--kt-surface2);border:1px solid var(--border);border-radius:var(--r2);padding:1.75rem}
+.qc-result-title{font-size:21px;font-weight:700;color:var(--text);margin-bottom:.4rem}
+.qc-result-sub{font-size:14px;color:var(--text2);margin-bottom:1.5rem}
+.qc-gates{display:flex;flex-direction:column;gap:.45rem;margin-bottom:1.25rem}
+.qc-gate{display:flex;align-items:center;gap:.7rem;background:var(--kt-surface3);border:1px solid var(--border);border-radius:var(--r);padding:.65rem .9rem;font-size:13px}
+.qc-gate-num{width:21px;height:21px;border-radius:50%;background:var(--kt-green3);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qc-gate-name{font-weight:500;color:var(--text);flex:1}
+.qc-gate-pass{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.qc-extra{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);border-radius:var(--r);padding:.9rem 1.1rem;margin-top:.9rem}
+.qc-extra-title{font-size:11px;font-weight:600;color:#fbbf24;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.5px}
+.qc-extra-item{font-size:12px;color:var(--text2);padding:2px 0;display:flex;gap:7px}
+.qc-extra-item::before{content:'+';color:#fbbf24;font-weight:700}
+.qc-progress{display:flex;gap:4px;margin-bottom:2rem}
+.qc-prog-dot{height:3px;flex:1;border-radius:2px;background:var(--border2);transition:background .3s}
+.qc-prog-dot.done{background:var(--kt-green3)}
+.qc-reset{margin-top:1.1rem}
+
+/* ── FOOTER ── */
+footer{background:var(--kt-surface2);border-top:1px solid var(--border);padding:2rem}
+.footer-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.footer-logo img{height:22px;filter:brightness(0) invert(1);opacity:.6}
+.footer-info{font-size:12px;color:var(--text3)}
+.footer-badge{background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.2);color:#fca5a5;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+@media(max-width:900px){
+  .hero-content{grid-template-columns:1fr}
+  .hero-right{display:none}
+}
+@media(max-width:720px){
+  .hero-stats{grid-template-columns:1fr 1fr}
+  .standards-grid{grid-template-columns:1fr}
+  .phase-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGO DATA -->
+<script>
+</script>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <img id="navLogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkQAAABnCAYAAADhR13rAAAB30lEQVR4nO3WMQEAIAzAMMC/5yFjRxMFPXtnZg4AQNjbDgAA2GaIAIA8QwQA5BkiACDPEAEAeYYIAMgzRABAniECAPIMEQCQZ4gAgDxDBADkGSIAIM8QAQB5hggAyDNEAECeIQIA8gwRAJBniACAPEMEAOQZIgAgzxABAHmGCADIM0QAQJ4hAgDyDBEAkGeIAIA8QwQA5BkiACDPEAEAeYYIAMgzRABAniECAPIMEQCQZ4gAgDxDBADkGSIAIM8QAQB5hggAyDNEAECeIQIA8gwRAJBniACAPEMEAOQZIgAgzxABAHmGCADIM0QAQJ4hAgDyDBEAkGeIAIA8QwQA5BkiACDPEAEAeYYIAMgzRABAniECAPIMEQCQZ4gAgDxDBADkGSIAIM8QAQB5hggAyDNEAECeIQIA8gwRAJBniACAPEMEAOQZIgAgzxABAHmGCADIM0QAQJ4hAgDyDBEAkGeIAIA8QwQA5BkiACDPEAEAeYYIAMgzRABAniECAPIMEQCQZ4gAgDxDBADkGSIAIM8QAQB5hggAyDNEAECeIQIA8gwRAJBniACAPEMEAOQZIgAgzxABAHmGCADIM0QAQJ4hAgDyDBEAkGeIAIA8QwQA5BkiACDPEAEAeYYIAMj7ClEEypTJ/dsAAAAASUVORK5CYII=" alt="KuveytTürk" style="height:28px">
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-title">AI Lab — Vibe Coding Yönetişim Kılavuzu</div>
+    <div class="nav-links">
+      <a class="nav-link" href="#flow">Süreç</a>
+      <a class="nav-link" href="#agents">Ajanlar</a>
+      <a class="nav-link" href="#standards">Standartlar</a>
+      <a class="nav-link" href="#quickcheck">Hızlı Kontrol</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO ════════════════════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="hero-bg">
+    <div class="hero-grid"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-glow2"></div>
+    <!-- VIBE CODING / AGENT BACKGROUND ILLUSTRATION -->
+    <svg class="hero-svg-bg" viewBox="0 0 1400 800" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <!-- Connection lines between nodes -->
+      <line x1="200" y1="400" x2="400" y2="240" stroke="#22a865" stroke-width="1.5" opacity=".5"/>
+      <line x1="400" y1="240" x2="640" y2="300" stroke="#22a865" stroke-width="1.5" opacity=".5"/>
+      <line x1="640" y1="300" x2="850" y2="200" stroke="#22a865" stroke-width="1.5" opacity=".5"/>
+      <line x1="850" y1="200" x2="1050" y2="300" stroke="#22a865" stroke-width="1.5" opacity=".5"/>
+      <line x1="1050" y1="300" x2="1250" y2="220" stroke="#22a865" stroke-width="1.5" opacity=".5"/>
+      <line x1="400" y1="240" x2="500" y2="440" stroke="#b8860b" stroke-width="1" opacity=".35"/>
+      <line x1="640" y1="300" x2="700" y2="520" stroke="#b8860b" stroke-width="1" opacity=".35"/>
+      <line x1="850" y1="200" x2="900" y2="480" stroke="#22a865" stroke-width="1" opacity=".3"/>
+      <line x1="1050" y1="300" x2="1100" y2="540" stroke="#22a865" stroke-width="1" opacity=".3"/>
+      <line x1="500" y1="440" x2="700" y2="520" stroke="#22a865" stroke-width="1.5" opacity=".4"/>
+      <line x1="700" y1="520" x2="900" y2="480" stroke="#22a865" stroke-width="1.5" opacity=".4"/>
+      <line x1="900" y1="480" x2="1100" y2="540" stroke="#22a865" stroke-width="1.5" opacity=".4"/>
+      <line x1="200" y1="400" x2="500" y2="440" stroke="#22a865" stroke-width="1" opacity=".25"/>
+      <line x1="640" y1="300" x2="500" y2="440" stroke="#b8860b" stroke-width="1" opacity=".25"/>
+      <!-- Faint data flow arrows -->
+      <polyline points="340,320 370,300 400,280" stroke="#22a865" stroke-width="1" fill="none" opacity=".3"/>
+      <polyline points="580,320 610,312 640,304" stroke="#22a865" stroke-width="1" fill="none" opacity=".3"/>
+      <!-- Agent nodes — circles -->
+      <!-- Orchestrator / brain - center top -->
+      <circle cx="700" cy="130" r="38" fill="none" stroke="#22a865" stroke-width="1.5" opacity=".6"/>
+      <circle cx="700" cy="130" r="28" fill="#0a4d2e" stroke="#22a865" stroke-width="1" opacity=".8"/>
+      <text x="700" y="126" text-anchor="middle" font-size="13" fill="#34c97e" font-family="monospace" opacity=".9">AI</text>
+      <text x="700" y="139" text-anchor="middle" font-size="9" fill="#86efac" font-family="monospace" opacity=".7">LAB</text>
+      <!-- Lines from orchestrator -->
+      <line x1="700" y1="168" x2="400" y2="240" stroke="#22a865" stroke-width="1" stroke-dasharray="4 3" opacity=".4"/>
+      <line x1="700" y1="168" x2="640" y2="300" stroke="#22a865" stroke-width="1" stroke-dasharray="4 3" opacity=".4"/>
+      <line x1="700" y1="168" x2="850" y2="200" stroke="#22a865" stroke-width="1" stroke-dasharray="4 3" opacity=".4"/>
+      <line x1="700" y1="168" x2="1050" y2="300" stroke="#22a865" stroke-width="1" stroke-dasharray="4 3" opacity=".4"/>
+      <!-- Architecture Agent -->
+      <circle cx="400" cy="240" r="30" fill="#0a4d2e" stroke="#1a8a52" stroke-width="1.2" opacity=".8"/>
+      <text x="400" y="237" text-anchor="middle" font-size="8" fill="#a7f3d0" font-family="monospace" opacity=".8">ARCH</text>
+      <text x="400" y="247" text-anchor="middle" font-size="8" fill="#a7f3d0" font-family="monospace" opacity=".8">AGENT</text>
+      <!-- Security Agent -->
+      <circle cx="850" cy="200" r="30" fill="#2a1010" stroke="#ef4444" stroke-width="1.2" opacity=".7"/>
+      <text x="850" y="197" text-anchor="middle" font-size="8" fill="#fca5a5" font-family="monospace" opacity=".8">SEC</text>
+      <text x="850" y="207" text-anchor="middle" font-size="8" fill="#fca5a5" font-family="monospace" opacity=".8">AGENT</text>
+      <!-- Code Review Agent -->
+      <circle cx="640" cy="300" r="28" fill="#160d2a" stroke="#8b5cf6" stroke-width="1.2" opacity=".7"/>
+      <text x="640" y="297" text-anchor="middle" font-size="8" fill="#c4b5fd" font-family="monospace" opacity=".8">CODE</text>
+      <text x="640" y="307" text-anchor="middle" font-size="8" fill="#c4b5fd" font-family="monospace" opacity=".8">REVIEW</text>
+      <!-- Framework Agent -->
+      <circle cx="1050" cy="300" r="28" fill="#1a1200" stroke="#d4a017" stroke-width="1.2" opacity=".7"/>
+      <text x="1050" y="297" text-anchor="middle" font-size="8" fill="#fcd34d" font-family="monospace" opacity=".8">FW</text>
+      <text x="1050" y="307" text-anchor="middle" font-size="8" fill="#fcd34d" font-family="monospace" opacity=".8">AGENT</text>
+      <!-- Bug Fix Agent -->
+      <circle cx="500" cy="440" r="26" fill="#0a2a1a" stroke="#22a865" stroke-width="1" opacity=".7"/>
+      <text x="500" y="437" text-anchor="middle" font-size="8" fill="#86efac" font-family="monospace" opacity=".75">BUG</text>
+      <text x="500" y="447" text-anchor="middle" font-size="8" fill="#86efac" font-family="monospace" opacity=".75">FIX</text>
+      <!-- Release Governor -->
+      <circle cx="900" cy="480" r="32" fill="#0a1a2a" stroke="#3b82f6" stroke-width="1.5" opacity=".75"/>
+      <text x="900" y="474" text-anchor="middle" font-size="8" fill="#93c5fd" font-family="monospace" opacity=".85">RELEASE</text>
+      <text x="900" y="484" text-anchor="middle" font-size="8" fill="#93c5fd" font-family="monospace" opacity=".85">GOVERNOR</text>
+      <!-- Pipeline nodes (rectangles) representing stages -->
+      <rect x="120" y="370" width="80" height="36" rx="6" fill="none" stroke="#22a865" stroke-width="1" opacity=".5"/>
+      <text x="160" y="385" text-anchor="middle" font-size="9" fill="#86efac" font-family="monospace" opacity=".65">BAŞVURU</text>
+      <text x="160" y="396" text-anchor="middle" font-size="8" fill="#86efac" font-family="monospace" opacity=".5">intake</text>
+      <rect x="650" y="490" width="100" height="36" rx="6" fill="none" stroke="#22a865" stroke-width="1" opacity=".5"/>
+      <text x="700" y="505" text-anchor="middle" font-size="9" fill="#86efac" font-family="monospace" opacity=".65">STAGE</text>
+      <text x="700" y="516" text-anchor="middle" font-size="8" fill="#86efac" font-family="monospace" opacity=".5">deploy</text>
+      <rect x="1050" y="510" width="120" height="36" rx="6" fill="none" stroke="#22a865" stroke-width="1" opacity=".5"/>
+      <text x="1110" y="525" text-anchor="middle" font-size="9" fill="#86efac" font-family="monospace" opacity=".65">PRODUCTION</text>
+      <text x="1110" y="536" text-anchor="middle" font-size="8" fill="#86efac" font-family="monospace" opacity=".5">k8s deploy</text>
+      <!-- Floating code lines (decorative) -->
+      <text x="90" y="220" font-size="10" fill="#22a865" font-family="monospace" opacity=".25">git push origin main</text>
+      <text x="980" y="140" font-size="10" fill="#22a865" font-family="monospace" opacity=".2">kubectl apply -f deploy.yaml</text>
+      <text x="200" y="620" font-size="10" fill="#22a865" font-family="monospace" opacity=".2">docker build -t lab/app:v1.0 .</text>
+      <text x="800" y="660" font-size="10" fill="#22a865" font-family="monospace" opacity=".18">helm upgrade --install app ./chart</text>
+      <text x="1150" y="600" font-size="10" fill="#b8860b" font-family="monospace" opacity=".2">sast_scan() → OK</text>
+      <text x="50" y="560" font-size="10" fill="#8b5cf6" font-family="monospace" opacity=".2">coverage: 84.3%</text>
+      <text x="460" y="600" font-size="10" fill="#ef4444" font-family="monospace" opacity=".2">CVE_CRITICAL: 0</text>
+      <!-- Small dot nodes scattered -->
+      <circle cx="290" cy="180" r="4" fill="#22a865" opacity=".3"/>
+      <circle cx="760" cy="370" r="4" fill="#22a865" opacity=".3"/>
+      <circle cx="1150" cy="420" r="4" fill="#22a865" opacity=".3"/>
+      <circle cx="330" cy="560" r="3" fill="#b8860b" opacity=".25"/>
+      <circle cx="1220" cy="350" r="3" fill="#3b82f6" opacity=".25"/>
+      <line x1="290" y1="180" x2="400" y2="240" stroke="#22a865" stroke-width="1" opacity=".2"/>
+      <line x1="760" y1="370" x2="700" y2="520" stroke="#22a865" stroke-width="1" opacity=".2"/>
+      <line x1="1150" y1="420" x2="1100" y2="540" stroke="#22a865" stroke-width="1" opacity=".2"/>
+      <!-- Human approval badge -->
+      <circle cx="1250" cy="220" r="22" fill="#160d2a" stroke="#a78bfa" stroke-width="1.2" opacity=".6"/>
+      <text x="1250" y="216" text-anchor="middle" font-size="8" fill="#c4b5fd" font-family="monospace" opacity=".75">HUMAN</text>
+      <text x="1250" y="226" text-anchor="middle" font-size="8" fill="#c4b5fd" font-family="monospace" opacity=".75">REVIEW</text>
+      <line x1="1050" y1="300" x2="1250" y2="220" stroke="#a78bfa" stroke-width="1" stroke-dasharray="3 3" opacity=".35"/>
+      <line x1="900" y1="480" x2="1100" y2="540" stroke="#3b82f6" stroke-width="1.5" opacity=".35"/>
+    </svg>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-left">
+      <div class="hero-kicker">
+        <div class="hero-kicker-dot"></div>
+        Veri ve Yapay Zeka Yönetişimi Müdürlüğü &nbsp;·&nbsp; v2.1 &nbsp;·&nbsp; 2025
+      </div>
+      <h1 class="hero-title big">
+        Fikirden<br>
+        <span>Production'a</span><br>
+        Güvenli ve Hızlı
+      </h1>
+      <p class="hero-sub">AI Lab'da yapay zeka destekli geliştirme için uçtan uca yönetişim çerçevesi. 4 aşama, 6 ajan, 2 insan onayı — banka güvencesiyle.</p>
+      <div class="hero-actions">
+        <a href="#flow" class="btn btn-primary">Süreci Keşfet →</a>
+        <a href="#quickcheck" class="btn btn-ghost">Hızlı Kontrol Yap</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hero-stat-num">4</div><div class="hero-stat-label">Süreç Aşaması</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">6</div><div class="hero-stat-label">Yönetişim Ajanı</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">5</div><div class="hero-stat-label">MD Standardı</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">2</div><div class="hero-stat-label">İnsan Onay Noktası</div></div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <!-- Visual pipeline diagram on right -->
+      <div class="pv-wrap">
+        <svg viewBox="0 0 380 420" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#163622"/>
+              <stop offset="100%" stop-color="#0f2a18"/>
+            </linearGradient>
+          </defs>
+          <!-- Vertical connector line -->
+          <line x1="190" y1="60" x2="190" y2="380" stroke="#22a865" stroke-width="1.5" stroke-dasharray="6 4" opacity=".35"/>
+          <!-- Stage cards -->
+          <!-- 1 -->
+          <rect x="40" y="30" width="300" height="64" rx="10" fill="url(#cardGrad)" stroke="#22a865" stroke-width="1.2" opacity=".9"/>
+          <circle cx="72" cy="62" r="16" fill="#0a4d2e" stroke="#22a865" stroke-width="1.2"/>
+          <text x="72" y="58" text-anchor="middle" font-size="9" fill="#a7f3d0" font-family="monospace">1</text>
+          <text x="72" y="68" text-anchor="middle" font-size="8" fill="#86efac" font-family="monospace">📋</text>
+          <text x="105" y="54" font-size="12" fill="#f0fdf4" font-family="Inter,sans-serif" font-weight="600">Başvuru</text>
+          <text x="105" y="68" font-size="10" fill="#86efac" font-family="Inter,sans-serif">Talep formu → Analitik Danışman</text>
+          <rect x="270" y="44" width="52" height="18" rx="9" fill="rgba(34,168,101,.15)" stroke="rgba(34,168,101,.3)" stroke-width="1"/>
+          <text x="296" y="56" text-anchor="middle" font-size="9" fill="#34c97e" font-family="Inter,sans-serif">1 gün</text>
+          <!-- 2 -->
+          <rect x="40" y="120" width="300" height="64" rx="10" fill="url(#cardGrad)" stroke="#1a8a52" stroke-width="1.2" opacity=".9"/>
+          <circle cx="72" cy="152" r="16" fill="#0a4d2e" stroke="#1a8a52" stroke-width="1.2"/>
+          <text x="72" y="148" text-anchor="middle" font-size="9" fill="#a7f3d0" font-family="monospace">2</text>
+          <text x="72" y="158" text-anchor="middle" font-size="8" fill="#86efac" font-family="monospace">🛠</text>
+          <text x="105" y="144" font-size="12" fill="#f0fdf4" font-family="Inter,sans-serif" font-weight="600">Geliştirme</text>
+          <text x="105" y="158" font-size="10" fill="#86efac" font-family="Inter,sans-serif">Vibe coding + 5 ajan kalite kapısı</text>
+          <rect x="262" y="134" width="60" height="18" rx="9" fill="rgba(34,168,101,.15)" stroke="rgba(34,168,101,.3)" stroke-width="1"/>
+          <text x="292" y="146" text-anchor="middle" font-size="9" fill="#34c97e" font-family="Inter,sans-serif">serbest</text>
+          <!-- 3 -->
+          <rect x="40" y="210" width="300" height="64" rx="10" fill="url(#cardGrad)" stroke="#d4a017" stroke-width="1.2" opacity=".9"/>
+          <circle cx="72" cy="242" r="16" fill="#1a1200" stroke="#d4a017" stroke-width="1.2"/>
+          <text x="72" y="238" text-anchor="middle" font-size="9" fill="#fcd34d" font-family="monospace">3</text>
+          <text x="72" y="248" text-anchor="middle" font-size="8" fill="#fcd34d" font-family="monospace">🧪</text>
+          <text x="105" y="234" font-size="12" fill="#f0fdf4" font-family="Inter,sans-serif" font-weight="600">Stage</text>
+          <text x="105" y="248" font-size="10" fill="#bbf7d0" font-family="Inter,sans-serif">Docker + K8s + İnsan Onayı</text>
+          <rect x="254" y="224" width="68" height="18" rx="9" fill="rgba(212,160,23,.14)" stroke="rgba(212,160,23,.28)" stroke-width="1"/>
+          <text x="288" y="236" text-anchor="middle" font-size="9" fill="#fcd34d" font-family="Inter,sans-serif">1–2 gün</text>
+          <!-- 4 -->
+          <rect x="40" y="300" width="300" height="64" rx="10" fill="url(#cardGrad)" stroke="#3b82f6" stroke-width="1.5" opacity=".9"/>
+          <circle cx="72" cy="332" r="16" fill="#0a1a2a" stroke="#3b82f6" stroke-width="1.5"/>
+          <text x="72" y="328" text-anchor="middle" font-size="9" fill="#93c5fd" font-family="monospace">4</text>
+          <text x="72" y="338" text-anchor="middle" font-size="8" fill="#93c5fd" font-family="monospace">🚀</text>
+          <text x="105" y="324" font-size="12" fill="#f0fdf4" font-family="Inter,sans-serif" font-weight="600">Production</text>
+          <text x="105" y="338" font-size="10" fill="#bbf7d0" font-family="Inter,sans-serif">Deploy + post-deploy izleme</text>
+          <rect x="250" y="314" width="72" height="18" rx="9" fill="rgba(59,130,246,.13)" stroke="rgba(59,130,246,.28)" stroke-width="1"/>
+          <text x="286" y="326" text-anchor="middle" font-size="9" fill="#60a5fa" font-family="Inter,sans-serif">aynı gün</text>
+          <!-- Arrow heads between cards -->
+          <polygon points="186,96 190,104 194,96" fill="#22a865" opacity=".7"/>
+          <polygon points="186,186 190,194 194,186" fill="#22a865" opacity=".7"/>
+          <polygon points="186,276 190,284 194,276" fill="#22a865" opacity=".7"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FLOW ════════════════════════════════════════════════════════════ -->
+<section id="flow">
+  <div class="section">
+    <div class="section-head">
+      <div class="section-tag">Süreç Akışı</div>
+      <h2 class="sec">Dört Aşamalı Pipeline</h2>
+      <p class="sec-desc">Her projenin geçtiği aşamaları keşfet. Adıma tıkla, detayları ve kapı koşullarını gör.</p>
+    </div>
+    <div class="phase-nav" id="phaseNav">
+      <button class="phase-btn active" onclick="showPhase(0)"><div class="ph-num">1</div>Başvuru</button>
+      <button class="phase-btn" onclick="showPhase(1)"><div class="ph-num">2</div>Geliştirme</button>
+      <button class="phase-btn" onclick="showPhase(2)"><div class="ph-num">3</div>Stage</button>
+      <button class="phase-btn" onclick="showPhase(3)"><div class="ph-num">4</div>Production</button>
+    </div>
+
+    <!-- Phase 0 -->
+    <div class="phase-content visible" id="phase-0">
+      <div class="phase-header">
+        <div class="phase-meta">
+          <div class="phase-title">📋 Başvuru ve Değerlendirme</div>
+          <div class="phase-desc">Fikrinin AI Lab'da hayat bulması için talep formunu doldur. Analitik Danışman 1 iş günü içinde geri döner.</div>
+        </div>
+        <div class="phase-badge badge-green">Hedef: 1 gün</div>
+      </div>
+      <div class="phase-grid">
+        <div class="phase-card">
+          <div class="pc-label">Talep Formu Alanları</div>
+          <ul class="pc-list">
+            <li>Talep Adı — kısa ve açıklayıcı başlık</li>
+            <li>Kullanım Amacı — çözdüğü iş problemi</li>
+            <li>Beklenen Fayda — ölçülebilir metrik</li>
+            <li>Başarı Kriteri — hedef sayısal değerler</li>
+            <li>AI Araç / Lisans Talebi</li>
+            <li>Proje Türü — Deneysel mi? Kuruma Entegre mi?</li>
+            <li>Kullanılacak Veri — sentetik / açık veri kaynağı</li>
+          </ul>
+        </div>
+        <div class="phase-card">
+          <div class="pc-label">Değerlendirme Sonuçları</div>
+          <ul class="pc-list">
+            <li><strong style="color:#4ade80">✅ Onay</strong> — Ortam ve lisans atamasına geç</li>
+            <li><strong style="color:#fbbf24">🔄 Revizyon</strong> — Formu güncelle, yeniden gönder</li>
+            <li><strong style="color:#f87171">❌ Red</strong> — Alternatif kanal yönlendirmesi</li>
+            <li><strong style="color:#a78bfa">🔍 SWAT İnceleme</strong> — Multidisipliner uzman ekip, ≤ 5 iş günü</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g0-1')">
+        <div class="gate-left"><div class="gate-icon gi-green">📝</div><div><div class="gate-name">Form Tamamlığı Kontrolü</div><div class="gate-agent">Analitik Danışman</div></div></div>
+        <div class="gate-status gs-human">İnsan Değerlendirmesi</div>
+        <div class="gate-chevron" id="chev-g0-1">▼</div>
+      </div>
+      <div class="gate-detail" id="g0-1">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Sorumlu</div><div class="gd-val">Analitik Danışman</div></div>
+          <div class="gd-item"><div class="gd-key">SLA</div><div class="gd-val">1 iş günü</div></div>
+          <div class="gd-item"><div class="gd-key">SWAT Eşiği</div><div class="gd-val">Yüksek karmaşıklık veya stratejik önem</div></div>
+        </div>
+        <div class="gd-block">⛔ Gerçek banka verisi, üretim sistemi veya AD/LDAP erişimi içeren başvurular otomatik reddedilir.</div>
+      </div>
+      <div class="phase-nav-btns">
+        <button class="btn btn-primary" onclick="showPhase(1)">Sonraki Aşama: Geliştirme →</button>
+      </div>
+    </div>
+
+    <!-- Phase 1 -->
+    <div class="phase-content" id="phase-1">
+      <div class="phase-header">
+        <div class="phase-meta">
+          <div class="phase-title">🛠 Geliştirme</div>
+          <div class="phase-desc">Onay alındıktan sonra Lab Mühendisi ortamı kurar, danışmanlık başlar. Her PR açılışında ajanlar devreye girer.</div>
+        </div>
+        <div class="phase-badge badge-blue">Süre: Serbest</div>
+      </div>
+      <div class="phase-grid">
+        <div class="phase-card">
+          <div class="pc-label">Lab Mühendisi Desteği</div>
+          <ul class="pc-list">
+            <li>Prompt mühendisliği optimizasyonu</li>
+            <li>Model seçimi ve kıyaslama</li>
+            <li>RAG mimarisi tasarımı</li>
+            <li>Ajan kurgusu ve orkestrasyon</li>
+            <li>Mimari yönlendirme ve danışmanlık</li>
+          </ul>
+        </div>
+        <div class="phase-card">
+          <div class="pc-label">Ortam Ataması</div>
+          <ul class="pc-list">
+            <li>Çalışma odası veya Deneyim Alanı rezervasyonu</li>
+            <li>AI araç lisans aktivasyonu</li>
+            <li>Standart repo şablonu (OBA/BOA uyumlu)</li>
+            <li>IDE ve linter konfigürasyonu</li>
+          </ul>
+        </div>
+      </div>
+      <div class="pc-label" style="margin-bottom:.6rem;font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.6px;text-transform:uppercase">Pipeline Adımları — Her PR'da Otomatik</div>
+      <div class="gate-row" onclick="toggleGate('g1-1')">
+        <div class="gate-left"><div class="gate-icon gi-green">⚙️</div><div><div class="gate-name">Build &amp; Lint</div><div class="gate-agent">Bug Fix Agent</div></div></div>
+        <div class="gate-status gs-auto">Otomatik</div><div class="gate-chevron" id="chev-g1-1">▼</div>
+      </div>
+      <div class="gate-detail" id="g1-1">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Kontrol</div><div class="gd-val">Derleme başarısı, lint temizliği</div></div>
+          <div class="gd-item"><div class="gd-key">Otomatik Düzeltme</div><div class="gd-val">Format, import, basit derleme hataları</div></div>
+        </div>
+        <div class="gd-block">⛔ Build hatası devam ediyorsa PR merge edilemez.</div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g1-2')">
+        <div class="gate-left"><div class="gate-icon gi-purple">🔍</div><div><div class="gate-name">Kod Kalitesi</div><div class="gate-agent">Code Review Agent</div></div></div>
+        <div class="gate-status gs-auto">Otomatik</div><div class="gate-chevron" id="chev-g1-2">▼</div>
+      </div>
+      <div class="gate-detail" id="g1-2">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Test Kapsamı</div><div class="gd-val">≥ %70 (kritik servisler)</div></div>
+          <div class="gd-item"><div class="gd-key">Kontrol</div><div class="gd-val">Kod kokusu, karmaşıklık, tekrar</div></div>
+        </div>
+        <div class="gd-block">⛔ Test kapsamı %70 altına düşerse prod geçişi engellenir.</div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g1-3')">
+        <div class="gate-left"><div class="gate-icon gi-green">🏛</div><div><div class="gate-name">Mimari Uyum</div><div class="gate-agent">Architecture Compliance Agent</div></div></div>
+        <div class="gate-status gs-auto">Otomatik</div><div class="gate-chevron" id="chev-g1-3">▼</div>
+      </div>
+      <div class="gate-detail" id="g1-3">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Eşik</div><div class="gd-val">Skor ≥ 85 / 100</div></div>
+          <div class="gd-item"><div class="gd-key">Referans</div><div class="gd-val">OBA-MD-001, BOA-MD-001</div></div>
+          <div class="gd-item"><div class="gd-key">Kapsam</div><div class="gd-val">Kuruma Entegre projeler</div></div>
+        </div>
+        <div class="gd-block">⛔ Skor 85 altında ise PR merge edilemez.</div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g1-4')">
+        <div class="gate-left"><div class="gate-icon gi-amber">⚙️</div><div><div class="gate-name">Framework Uyumu</div><div class="gate-agent">Framework Compliance Agent</div></div></div>
+        <div class="gate-status gs-auto">Otomatik</div><div class="gate-chevron" id="chev-g1-4">▼</div>
+      </div>
+      <div class="gate-detail" id="g1-4">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Eşik</div><div class="gd-val">Skor ≥ 90 / 100</div></div>
+          <div class="gd-item"><div class="gd-key">Referans</div><div class="gd-val">OBA-FE/BE-MD-001</div></div>
+        </div>
+        <div class="gd-block">⛔ Skor 90 altında ise manuel inceleme tetiklenir.</div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g1-5')">
+        <div class="gate-left"><div class="gate-icon gi-red">🔒</div><div><div class="gate-name">Güvenlik Taraması</div><div class="gate-agent">Security Agent</div></div></div>
+        <div class="gate-status gs-block">Kritik Blok</div><div class="gate-chevron" id="chev-g1-5">▼</div>
+      </div>
+      <div class="gate-detail" id="g1-5">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">SAST</div><div class="gd-val">Statik kaynak kodu analizi</div></div>
+          <div class="gd-item"><div class="gd-key">Dependency Scan</div><div class="gd-val">CVE taraması</div></div>
+          <div class="gd-item"><div class="gd-key">Secret Scan</div><div class="gd-val">API key, token, parola tespiti</div></div>
+        </div>
+        <div class="gd-block">⛔ Kritik CVE &gt; 0 veya herhangi bir secret tespiti → PR otomatik bloklanır.</div>
+      </div>
+      <div class="phase-nav-btns">
+        <button class="btn btn-ghost" onclick="showPhase(0)">← Başvuru</button>
+        <button class="btn btn-primary" onclick="showPhase(2)">Sonraki: Stage →</button>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="phase-content" id="phase-2">
+      <div class="phase-header">
+        <div class="phase-meta">
+          <div class="phase-title">🧪 Stage</div>
+          <div class="phase-desc">Tüm ajan kapıları yeşil olduğunda pipeline otomatik stage aşamasına geçer. İnsan onayı burada alınır.</div>
+        </div>
+        <div class="phase-badge badge-amber">Hedef: 1–2 gün</div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g2-1')">
+        <div class="gate-left"><div class="gate-icon gi-green">📦</div><div><div class="gate-name">Docker İmaj Üretimi</div><div class="gate-agent">Security Agent</div></div></div>
+        <div class="gate-status gs-auto">Otomatik</div><div class="gate-chevron" id="chev-g2-1">▼</div>
+      </div>
+      <div class="gate-detail" id="g2-1">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Gereksinimler</div><div class="gd-val">Kurumsal base imaj, non-root user, multi-stage build</div></div>
+          <div class="gd-item"><div class="gd-key">Çıktı</div><div class="gd-val">SBOM üretimi zorunlu</div></div>
+        </div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g2-2')">
+        <div class="gate-left"><div class="gate-icon gi-red">🔍</div><div><div class="gate-name">İmaj Güvenlik Taraması</div><div class="gate-agent">Security Agent</div></div></div>
+        <div class="gate-status gs-block">Kritik Blok</div><div class="gate-chevron" id="chev-g2-2">▼</div>
+      </div>
+      <div class="gate-detail" id="g2-2">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Zafiyet Taraması</div><div class="gd-val">CVE severity analizi</div></div>
+          <div class="gd-item"><div class="gd-key">Lisans Kontrolü</div><div class="gd-val">Lisans uyumluluk doğrulaması</div></div>
+        </div>
+        <div class="gd-block">⛔ Kritik CVE = 0 koşulu sağlanmadan stage deploy yapılamaz.</div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g2-3')">
+        <div class="gate-left"><div class="gate-icon gi-green">🧪</div><div><div class="gate-name">Stage Deploy &amp; Smoke Test</div><div class="gate-agent">Release Governor Agent</div></div></div>
+        <div class="gate-status gs-auto">Otomatik</div><div class="gate-chevron" id="chev-g2-3">▼</div>
+      </div>
+      <div class="gate-detail" id="g2-3">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Deploy</div><div class="gd-val">Helm chart ile K8s stage ortamı</div></div>
+          <div class="gd-item"><div class="gd-key">Koşul</div><div class="gd-val">Smoke test %100, sağlık kontrolleri yeşil</div></div>
+        </div>
+        <div class="gd-block">⛔ Smoke test başarısız ise production geçişi yoktur.</div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g2-4')" style="border-color:rgba(139,92,246,.28)">
+        <div class="gate-left"><div class="gate-icon gi-purple">👤</div><div><div class="gate-name">İnsan Onayı</div><div class="gate-agent">YZ / Ar-Ge Mühendisi</div></div></div>
+        <div class="gate-status gs-human">İnsan Onayı</div><div class="gate-chevron" id="chev-g2-4">▼</div>
+      </div>
+      <div class="gate-detail" id="g2-4" style="border-color:rgba(139,92,246,.2);background:rgba(139,92,246,.04)">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Karar Veren</div><div class="gd-val">YZ Mühendisi veya Ar-Ge Mühendisi</div></div>
+          <div class="gd-item"><div class="gd-key">SLA</div><div class="gd-val" style="color:#4ade80;font-weight:600">4 iş saati</div></div>
+          <div class="gd-item"><div class="gd-key">Kapsam</div><div class="gd-val">Stage incelemesi + teknik onay</div></div>
+        </div>
+        <div class="gd-block" style="background:rgba(139,92,246,.07);border-color:rgba(139,92,246,.2);color:#c4b5fd">⚠ Onay olmadan production deploy tetiklenemez.</div>
+      </div>
+      <div class="phase-nav-btns">
+        <button class="btn btn-ghost" onclick="showPhase(1)">← Geliştirme</button>
+        <button class="btn btn-primary" onclick="showPhase(3)">Sonraki: Production →</button>
+      </div>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="phase-content" id="phase-3">
+      <div class="phase-header">
+        <div class="phase-meta">
+          <div class="phase-title">🚀 Production</div>
+          <div class="phase-desc">İnsan onayının ardından Release Governor nihai kararı verir. Dağıtım stratejisi seçilir, post-deploy izleme başlar.</div>
+        </div>
+        <div class="phase-badge badge-blue">Hedef: Aynı gün</div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g3-1')">
+        <div class="gate-left"><div class="gate-icon gi-blue">🚦</div><div><div class="gate-name">Release Gate</div><div class="gate-agent">Release Governor Agent</div></div></div>
+        <div class="gate-status gs-auto">Otomatik</div><div class="gate-chevron" id="chev-g3-1">▼</div>
+      </div>
+      <div class="gate-detail" id="g3-1">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Kontrol</div><div class="gd-val">Tüm kapılar yeşil + insan onayı kayıtlı</div></div>
+          <div class="gd-item"><div class="gd-key">Karar</div><div class="gd-val">Geç / Bekle / Engelle</div></div>
+        </div>
+        <div class="gd-block">⛔ Herhangi bir kapı kırmızı veya insan onayı eksik → deploy başlamaz.</div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g3-2')">
+        <div class="gate-left"><div class="gate-icon gi-green">🚀</div><div><div class="gate-name">Production Deploy</div><div class="gate-agent">Release Governor Agent</div></div></div>
+        <div class="gate-status gs-human">YZ/Ar-Ge Onayı</div><div class="gate-chevron" id="chev-g3-2">▼</div>
+      </div>
+      <div class="gate-detail" id="g3-2">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Rolling Update</div><div class="gd-val">Standart güncellemeler</div></div>
+          <div class="gd-item"><div class="gd-key">Blue-Green</div><div class="gd-val">Kritik geçişler, hızlı rollback</div></div>
+          <div class="gd-item"><div class="gd-key">Canary</div><div class="gd-val">Kademeli açılım</div></div>
+        </div>
+      </div>
+      <div class="gate-row" onclick="toggleGate('g3-3')">
+        <div class="gate-left"><div class="gate-icon gi-green">📊</div><div><div class="gate-name">Post-Deploy İzleme</div><div class="gate-agent">Release Governor Agent</div></div></div>
+        <div class="gate-status gs-auto">Otomatik</div><div class="gate-chevron" id="chev-g3-3">▼</div>
+      </div>
+      <div class="gate-detail" id="g3-3">
+        <div class="gd-row">
+          <div class="gd-item"><div class="gd-key">Hata Oranı</div><div class="gd-val">&lt; %1</div></div>
+          <div class="gd-item"><div class="gd-key">Latency</div><div class="gd-val">P99 stabil</div></div>
+          <div class="gd-item"><div class="gd-key">Rollback</div><div class="gd-val">Otomatik — eşik aşılırsa</div></div>
+        </div>
+        <div class="gd-block">⛔ Hata oranı &gt; %1 veya readiness probe başarısızlığı → otomatik rollback.</div>
+      </div>
+      <div style="margin-top:1.25rem;background:rgba(34,168,101,.06);border:1px solid rgba(34,168,101,.2);border-radius:var(--r2);padding:1.1rem 1.35rem">
+        <div style="font-size:12px;font-weight:600;color:#4ade80;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.5px">Tebrikler — Proje Canlıda!</div>
+        <div style="font-size:13px;color:var(--text2)">Tüm kapılar geçildi, insan onayları alındı, deployment tamamlandı.</div>
+      </div>
+      <div class="phase-nav-btns">
+        <button class="btn btn-ghost" onclick="showPhase(2)">← Stage</button>
+        <button class="btn btn-primary" onclick="showPhase(0)">Başa Dön ↺</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ AGENTS ══════════════════════════════════════════════════════════ -->
+<section id="agents">
+  <div class="section">
+    <div class="section-head">
+      <div class="section-tag">Yönetişim Ajanları</div>
+      <h2 class="sec">6 Ajan, 6 Sorumluluk</h2>
+      <p class="sec-desc">Her ajan tek bir alana odaklanır. Karta tıkla, detayları gör.</p>
+    </div>
+    <div class="agents-grid">
+      <div class="agent-card ac-green" onclick="toggleAgent(this)">
+        <div class="agent-head"><div class="agent-icon ai-green">🏛</div><div><div class="agent-name">Architecture Compliance Agent</div><div class="agent-trigger">Tetikleyici: PR açılışı</div></div></div>
+        <div class="agent-desc">Servis sınırlarını, mikroservis ayrışımını ve bağımlılık kalıplarını kurumsal MD'lere göre denetler.</div>
+        <div class="agent-tags"><span class="tag">Mikroservis</span><span class="tag">Bağımlılık</span><span class="tag">Katman</span></div>
+        <div class="agent-block">⛔ Blok: Skor &lt; 85/100 → PR merge edilemez</div>
+        <div class="expand-hint">↓ Detaylar için tıkla</div>
+        <div class="agent-expand">
+          <div class="agent-expand-title">Kontrol Ettiği Kurallar</div>
+          <div class="agent-rule">Servis sınırı ihlallerini PR seviyesinde işaretler</div>
+          <div class="agent-rule">Katmanlar arası yasak bağımlılıkları tespit eder</div>
+          <div class="agent-rule">Her bulgu için düzeltme önerisi içerir</div>
+          <div class="agent-expand-title" style="margin-top:.6rem">Referans MD</div>
+          <span class="agent-md-ref">OBA-MD-001</span><span class="agent-md-ref">BOA-MD-001</span>
+        </div>
+      </div>
+      <div class="agent-card ac-gold" onclick="toggleAgent(this)">
+        <div class="agent-head"><div class="agent-icon ai-gold">⚙️</div><div><div class="agent-name">Framework Compliance Agent</div><div class="agent-trigger">Tetikleyici: PR açılışı, Build</div></div></div>
+        <div class="agent-desc">OBA/BOA framework kullanımını, proje şablonunu ve katman düzenini kontrol eder.</div>
+        <div class="agent-tags"><span class="tag">OBA/BOA</span><span class="tag">Şablon</span><span class="tag">Paket Düzeni</span></div>
+        <div class="agent-block">⛔ Blok: Skor &lt; 90/100 → manuel inceleme</div>
+        <div class="expand-hint">↓ Detaylar için tıkla</div>
+        <div class="agent-expand">
+          <div class="agent-expand-title">Kontrol Ettiği Kurallar</div>
+          <div class="agent-rule">OBA/BOA proje şablonuna uyumu doğrular</div>
+          <div class="agent-rule">Yasaklı bağımlılık ve framework kullanımlarını tespit eder</div>
+          <div class="agent-expand-title" style="margin-top:.6rem">Referans MD</div>
+          <span class="agent-md-ref">OBA-FE-MD-001</span><span class="agent-md-ref">OBA-BE-MD-001</span>
+        </div>
+      </div>
+      <div class="agent-card ac-purple" onclick="toggleAgent(this)">
+        <div class="agent-head"><div class="agent-icon ai-purple">🔍</div><div><div class="agent-name">Code Review Agent</div><div class="agent-trigger">Tetikleyici: PR açılışı, Commit</div></div></div>
+        <div class="agent-desc">Kod kokusu, karmaşıklık, test kapsamı eksiklikleri ve refactor fırsatlarını raporlar.</div>
+        <div class="agent-tags"><span class="tag">Test Kapsamı</span><span class="tag">Karmaşıklık</span><span class="tag">Refactor</span></div>
+        <div class="agent-block">⛔ Blok: Test kapsamı &lt; %70 → prod geçiş engeli</div>
+        <div class="expand-hint">↓ Detaylar için tıkla</div>
+        <div class="agent-expand">
+          <div class="agent-expand-title">Kontrol Ettiği Kurallar</div>
+          <div class="agent-rule">DRY ihlalleri ve kod tekrarını raporlar</div>
+          <div class="agent-rule">Kritik kod yollarında test eklemesi önerir</div>
+          <div class="agent-rule">Sadece öneri üretir; karar geliştiricidedir</div>
+          <div class="agent-expand-title" style="margin-top:.6rem">Referans</div>
+          <span class="agent-md-ref">Kod İnceleme Rehberi</span>
+        </div>
+      </div>
+      <div class="agent-card ac-red" onclick="toggleAgent(this)">
+        <div class="agent-head"><div class="agent-icon ai-red">🔒</div><div><div class="agent-name">Security Agent</div><div class="agent-trigger">Tetikleyici: PR, Build, İmaj</div></div></div>
+        <div class="agent-desc">SAST, bağımlılık taraması, secret taraması ve container imaj zafiyet analizini yürütür.</div>
+        <div class="agent-tags"><span class="tag">SAST</span><span class="tag">CVE Tarama</span><span class="tag">Secret Scan</span><span class="tag">Container</span></div>
+        <div class="agent-block">⛔ Blok: Kritik CVE &gt; 0 veya secret tespiti → Deploy durur</div>
+        <div class="expand-hint">↓ Detaylar için tıkla</div>
+        <div class="agent-expand">
+          <div class="agent-expand-title">Tarama Türleri</div>
+          <div class="agent-rule">SAST: enjeksiyon, güvensiz fonksiyon kullanımı</div>
+          <div class="agent-rule">Dependency Scan: bilinen CVE'lere sahip kütüphaneler</div>
+          <div class="agent-rule">Secret Scan: API key, parola, token → otomatik blok</div>
+          <div class="agent-rule">Container Scan: Docker imaj zafiyet analizi</div>
+          <div class="agent-expand-title" style="margin-top:.6rem">Referans MD</div>
+          <span class="agent-md-ref">GUV-MD-001</span><span class="agent-md-ref">BGV-MD-001</span>
+        </div>
+      </div>
+      <div class="agent-card ac-teal" onclick="toggleAgent(this)">
+        <div class="agent-head"><div class="agent-icon ai-teal">🐛</div><div><div class="agent-name">Bug Fix Agent</div><div class="agent-trigger">Tetikleyici: Build hatası, Test başarısızlığı</div></div></div>
+        <div class="agent-desc">Derleme ve test hatalarını analiz ederek otomatik patch üretir. Yüksek riskli değişiklikleri insana bırakır.</div>
+        <div class="agent-tags"><span class="tag">Otomatik Patch</span><span class="tag">Lint Fix</span><span class="tag">Format</span></div>
+        <div class="agent-block">⚠ Güvenlik/mimari değişiklikler → Sadece öneri, insan onayı zorunlu</div>
+        <div class="expand-hint">↓ Detaylar için tıkla</div>
+        <div class="agent-expand">
+          <div class="agent-expand-title">Otomatik Uygulayabilir</div>
+          <div class="agent-rule">Lint, format, import düzeni</div>
+          <div class="agent-rule">Bağımlılık sürüm çakışmaları</div>
+          <div class="agent-rule">Basit derleme hataları</div>
+          <div class="agent-expand-title" style="margin-top:.6rem">Sadece Öneri Üretir</div>
+          <div class="agent-rule">Güvenlik açığı kapatma yöntemleri</div>
+          <div class="agent-rule">Mimari refactor, veri modeli değişiklikleri</div>
+          <div class="agent-expand-title" style="margin-top:.6rem">Referans MD</div>
+          <span class="agent-md-ref">DIL-MD-001</span>
+        </div>
+      </div>
+      <div class="agent-card ac-green" onclick="toggleAgent(this)">
+        <div class="agent-head"><div class="agent-icon ai-green">🚦</div><div><div class="agent-name">Release Governor Agent</div><div class="agent-trigger">Tetikleyici: Stage onayı, Prod talebi</div></div></div>
+        <div class="agent-desc">Tüm ajanlardan gelen sonuçları ve insan onayını birleştirir. Post-deploy izleme ve otomatik rollback'ten sorumludur.</div>
+        <div class="agent-tags"><span class="tag">Release Kararı</span><span class="tag">Rollback</span><span class="tag">İzleme</span></div>
+        <div class="agent-block">⛔ Blok: Herhangi kapı kırmızı veya insan onayı eksik → Deploy yok</div>
+        <div class="expand-hint">↓ Detaylar için tıkla</div>
+        <div class="agent-expand">
+          <div class="agent-expand-title">Kararlar</div>
+          <div class="agent-rule">Geç: tüm kapılar yeşil + insan onayı alındı</div>
+          <div class="agent-rule">Bekle: bekleyen işlem veya eksik onay var</div>
+          <div class="agent-rule">Engelle: kritik bulgu veya kapı başarısız</div>
+          <div class="agent-expand-title" style="margin-top:.6rem">Otomatik Rollback</div>
+          <div class="agent-rule">Hata oranı &gt; %1</div>
+          <div class="agent-rule">P99 latency iki katına çıkması</div>
+          <div class="agent-rule">Readiness probe başarısızlığı</div>
+          <div class="agent-expand-title" style="margin-top:.6rem">Referans</div>
+          <span class="agent-md-ref">Tüm MD'ler</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STANDARDS ══════════════════════════════════════════════════════ -->
+<section id="standards">
+  <div class="section">
+    <div class="section-head">
+      <div class="section-tag">MD Standartları</div>
+      <h2 class="sec">Değiştirilemez Referanslar</h2>
+      <p class="sec-desc">Ajanların tüm kararları bu dosyalara dayanır. Bir standarda tıkla, detaylarını gör.</p>
+    </div>
+    <div class="standards-grid">
+      <div class="std-list" id="stdList">
+        <button class="std-btn active" onclick="showStd(0)"><span class="std-code">OBA/BOA-MD-001</span><span class="std-name">Kurumsal Mimari</span></button>
+        <button class="std-btn" onclick="showStd(1)"><span class="std-code">GUV-MD-001</span><span class="std-name">Uygulama Güvenliği</span></button>
+        <button class="std-btn" onclick="showStd(2)"><span class="std-code">BGV-MD-001</span><span class="std-name">Bilgi Güvenliği</span></button>
+        <button class="std-btn" onclick="showStd(3)"><span class="std-code">DIL-MD-001</span><span class="std-name">Dil &amp; Sürüm Uyumu</span></button>
+        <button class="std-btn" onclick="showStd(4)"><span class="std-code">VTB-MD-001</span><span class="std-name">Veritabanı Teknoloji</span></button>
+      </div>
+      <div class="std-detail" id="stdDetail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ QUICK CHECK ════════════════════════════════════════════════════ -->
+<section id="quickcheck">
+  <div class="section">
+    <div class="section-head">
+      <div class="section-tag">Hızlı Kontrol</div>
+      <h2 class="sec">Benim Projeme Hangi Kapılar Uygulanır?</h2>
+      <p class="sec-desc">İki soruyu yanıtla, kalite kapı planını gör.</p>
+    </div>
+    <div class="qc-container">
+      <div class="qc-progress" id="qcProgress">
+        <div class="qc-prog-dot done" id="qp0"></div>
+        <div class="qc-prog-dot" id="qp1"></div>
+        <div class="qc-prog-dot" id="qp2"></div>
+      </div>
+      <div class="qc-step active" id="qcs-0">
+        <div class="qc-question">Projenin türü nedir?</div>
+        <div class="qc-options">
+          <div class="qc-option" onclick="qcSelect(0,'poc')">
+            <div class="qc-opt-icon">🧪</div>
+            <div><div class="qc-opt-title">Deneysel / PoC</div><div class="qc-opt-sub">Kurum entegrasyonu hedeflemiyorum</div></div>
+          </div>
+          <div class="qc-option" onclick="qcSelect(0,'prod')">
+            <div class="qc-opt-icon">🔗</div>
+            <div><div class="qc-opt-title">Kuruma Entegre</div><div class="qc-opt-sub">Üretim sistemleriyle entegre olacak bir ürün geliştiriyorum</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="qc-step" id="qcs-1">
+        <div class="qc-question">Dış servislere veya API'lere erişim var mı?</div>
+        <div class="qc-options">
+          <div class="qc-option" onclick="qcSelect(1,'no-ext')">
+            <div class="qc-opt-icon">🔒</div>
+            <div><div class="qc-opt-title">Hayır, tamamen bağımsız</div><div class="qc-opt-sub">Dış servis çağrısı yok</div></div>
+          </div>
+          <div class="qc-option" onclick="qcSelect(1,'ext')">
+            <div class="qc-opt-icon">🌐</div>
+            <div><div class="qc-opt-title">Evet, dış servis / API kullanıyor</div><div class="qc-opt-sub">Harici API, webhook veya üçüncü taraf entegrasyon var</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="qc-step" id="qcs-2">
+        <div class="qc-result" id="qcResult"></div>
+        <button class="btn btn-ghost qc-reset" onclick="qcReset()">↺ Yeniden Başla</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo"><img id="footerLogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkQAAABnCAYAAADhR13rAAAB30lEQVR4nO3WMQEAIAzAMMC/5yFjRxMFPXtnZg4AQNjbDgAA2GaIAIA8QwQA5BkiACDPEAEAeYYIAMgzRABAniECAPIMEQCQZ4gAgDxDBADkGSIAIM8QAQB5hggAyDNEAECeIQIA8gwRAJBniACAPEMEAOQZIgAgzxABAHmGCADIM0QAQJ4hAgDyDBEAkGeIAIA8QwQA5BkiACDPEAEAeYYIAMgzRABAniECAPIMEQCQZ4gAgDxDBADkGSIAIM8QAQB5hggAyDNEAECeIQIA8gwRAJBniACAPEMEAOQZIgAgzxABAHmGCADIM0QAQJ4hAgDyDBEAkGeIAIA8QwQA5BkiACDPEAEAeYYIAMgzRABAniECAPIMEQCQZ4gAgDxDBADkGSIAIM8QAQB5hggAyDNEAECeIQIA8gwRAJBniACAPEMEAOQZIgAgzxABAHmGCADIM0QAQJ4hAgDyDBEAkGeIAIA8QwQA5BkiACDPEAEAeYYIAMgzRABAniECAPIMEQCQZ4gAgDxDBADkGSIAIM8QAQB5hggAyDNEAECeIQIA8gwRAJBniACAPEMEAOQZIgAgzxABAHmGCADIM0QAQJ4hAgDyDBEAkGeIAIA8QwQA5BkiACDPEAEAeYYIAMj7ClEEypTJ/dsAAAAASUVORK5CYII=" alt="KuveytTürk" style="height:22px;opacity:.7"></div>
+    <div class="footer-info">AI Lab Vibe Coding Yönetişim Kılavuzu v2.1 &nbsp;·&nbsp; Veri ve Yapay Zeka Yönetişimi Müdürlüğü &nbsp;·&nbsp; 2025</div>
+    <div class="footer-badge">DAHİLİ — GİZLİ</div>
+  </div>
+</footer>
+
+<script>
+
+// ── PHASE FLOW ──
+function showPhase(n) {
+  document.querySelectorAll('.phase-content').forEach((el,i) => el.classList.toggle('visible', i===n));
+  document.querySelectorAll('.phase-btn').forEach((b,i) => {
+    b.classList.remove('active','done');
+    if(i===n) b.classList.add('active');
+    else if(i<n) b.classList.add('done');
+  });
+  document.getElementById('flow').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function toggleGate(id) {
+  const el = document.getElementById(id);
+  const chev = document.getElementById('chev-'+id);
+  const open = el.classList.toggle('open');
+  if(chev) chev.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+// ── AGENTS ──
+function toggleAgent(card) {
+  const was = card.classList.contains('expanded');
+  document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('expanded'));
+  if(!was) card.classList.add('expanded');
+}
+
+// ── STANDARDS ──
+const standards = [
+  { code:'OBA/BOA-MD-001', name:'Kurumsal Mimari Standardı', icon:'🏛',
+    desc:'Servis ayrışımı, entegrasyon kalıpları, frontend ve backend katman yapısını tanımlar.',
+    rules:['Servis tekil sorumluluk prensibine göre ayrıştırılır','Katmanlar arası bağımlılıklar tanımlı sınırlar içinde olmalıdır','Ortak bileşenler kurumsal kütüphaneden tüketilir','Frontend-backend ayrımı zorunludur','API sözleşmesi versiyonlanır'],
+    agents:['Architecture Compliance Agent','Framework Compliance Agent'] },
+  { code:'GUV-MD-001', name:'Uygulama Güvenliği Standardı', icon:'🔒',
+    desc:'Güvenli kod yazım standartları, SAST gereksinimleri, secret yönetimi ve container hardening kurallarını içerir.',
+    rules:['Kaynak kodda API key, parola veya token bulundurulamaz','Tüm kullanıcı girdileri doğrulanmalı ve sanitize edilmelidir','Bağımlılıklar bilinen CVE\'ler açısından taranmalıdır','Container\'lar non-root kullanıcı ile çalışmalıdır','SBOM her release için üretilir'],
+    agents:['Security Agent'] },
+  { code:'BGV-MD-001', name:'Bilgi Güvenliği Standardı', icon:'🛡',
+    desc:'Veri sınıflandırma, erişim kontrolü, loglama politikası ve DLP kurallarını tanımlar.',
+    rules:['AI Lab\'da gerçek banka verisi kullanılamaz — yalnızca sentetik veya açık veri','Loglar kişisel tanımlayıcı veya işlem verisi içeremez','Structured JSON log formatı zorunludur','Dışa veri çıkışı DLP araçlarıyla izlenir','Minimum yetki prensibi zorunludur'],
+    agents:['Security Agent','Release Governor Agent'] },
+  { code:'DIL-MD-001', name:'Dil & Sürüm Uyum Standardı', icon:'💻',
+    desc:'Kurumca desteklenen programlama dilleri ve sürüm matrisini tanımlar.',
+    rules:['Python: kurumca onaylı sürüm listesine uyulur','.NET: desteklenen LTS sürümleri kullanılır','Node.js: kurumca onaylı LTS sürümleri','Desteklenmeyen sürüm Framework Agent tarafından bloklanır','Bağımlılık çakışmaları Bug Fix Agent raporlar'],
+    agents:['Framework Compliance Agent','Bug Fix Agent'] },
+  { code:'VTB-MD-001', name:'Veritabanı Teknoloji Standardı', icon:'🗄',
+    desc:'Kurumda desteklenen veritabanı, cache ve mesajlaşma teknolojilerini listeler.',
+    rules:['Yalnızca kurumca desteklenen DB teknolojileri kullanılabilir','Cache için kurumca onaylı çözümler (Redis vb.) kullanılır','Mesajlaşma: Kafka veya RabbitMQ — kurumca desteklenen sürümler','Veritabanı seçimi Lab Mühendisi ile koordineli yapılır','Desteklenmeyen teknoloji Architecture Agent tarafından işaretlenir'],
+    agents:['Architecture Compliance Agent'] }
+];
+
+function showStd(n) {
+  document.querySelectorAll('.std-btn').forEach((b,i) => b.classList.toggle('active', i===n));
+  const s = standards[n];
+  document.getElementById('stdDetail').innerHTML = `
+    <div class="std-detail-header">
+      <div class="std-detail-icon">${s.icon}</div>
+      <div><div class="std-detail-code">${s.code}</div><div class="std-detail-name">${s.name}</div></div>
+    </div>
+    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:.9rem">${s.desc}</p>
+    <div class="std-rules">${s.rules.map(r=>`<div class="std-rule-item">${r}</div>`).join('')}</div>
+    <div class="std-agents-label">Bu Standardı Kullanan Ajanlar</div>
+    <div>${s.agents.map(a=>`<span class="agent-md-ref">${a}</span>`).join('')}</div>`;
+}
+showStd(0);
+
+// ── QUICK CHECK ──
+let qcState = {};
+function qcSelect(step, val) {
+  qcState['s'+step] = val;
+  document.querySelectorAll(`#qcs-${step} .qc-option`).forEach(o => o.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  setTimeout(() => showQCStep(step+1), 280);
+}
+function showQCStep(n) {
+  document.querySelectorAll('.qc-step').forEach((s,i) => s.classList.toggle('active', i===n));
+  for(let i=0;i<=n;i++){ const d=document.getElementById('qp'+i); if(d) d.classList.add('done'); }
+  if(n===2) buildQCResult();
+}
+function buildQCResult() {
+  const isProd = qcState.s0==='prod', hasExt = qcState.s1==='ext';
+  const common = [
+    {n:'Build & Lint',         h:false},
+    {n:'Kod Kalitesi',         h:false},
+    {n:'Güvenlik Taraması',    h:false},
+    {n:'Docker İmaj Tarama',   h:false},
+    {n:'Stage Smoke Test',     h:false},
+    {n:'İnsan Onayı (Stage)',  h:true},
+    {n:'Release Gate',         h:false},
+    {n:'İnsan Onayı (Prod)',   h:true},
+  ];
+  const extra = isProd ? ['Architecture Compliance ≥ 85/100','Framework Compliance ≥ 90/100','OBA/BOA şablon uyumu','DIL-MD-001 ve VTB-MD-001 uyumu','K8s kaynak limitleri ve network policy'] : [];
+  const extNote = hasExt ? `<div class="qc-extra"><div class="qc-extra-title">Dış Servis Ek Gereksinimleri</div><div class="qc-extra-item">Lab Mühendisi onayı ile beyaz listeye ekleme</div><div class="qc-extra-item">Secret yönetimi vault/env variable ile zorunlu</div></div>` : '';
+  document.getElementById('qcResult').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;flex-wrap:wrap;gap:.5rem">
+      <div class="qc-result-title">Kalite Kapı Planın</div>
+      <span class="phase-badge ${isProd?'badge-blue':'badge-green'}">${isProd?'🔗 Kuruma Entegre':'🧪 Deneysel / PoC'}</span>
+    </div>
+    <div class="qc-result-sub">${isProd?'Tüm kapılar ve ek kurumsal mimari gereksinimleri uygulanır.':'Temel güvenlik ve kalite kapıları uygulanır.'}</div>
+    <div class="qc-gates">${common.map((g,i)=>`<div class="qc-gate"><div class="qc-gate-num">${i+1}</div><div class="qc-gate-name">${g.n}</div><span class="qc-gate-pass ${g.h?'gs-human':'gs-auto'}">${g.h?'İnsan Onayı':'Otomatik'}</span></div>`).join('')}</div>
+    ${extra.length?`<div class="qc-extra"><div class="qc-extra-title">Kuruma Entegre Ek Kapılar</div>${extra.map(e=>`<div class="qc-extra-item">${e}</div>`).join('')}</div>`:''}
+    ${extNote}`;
+}
+function qcReset() {
+  qcState = {};
+  document.querySelectorAll('.qc-step').forEach((s,i) => s.classList.toggle('active', i===0));
+  document.querySelectorAll('.qc-option').forEach(o => o.classList.remove('selected'));
+  document.querySelectorAll('.qc-prog-dot').forEach((d,i) => d.classList.toggle('done', i===0));
+}
+
+// ── NAV ACTIVE STATE ──
+const sectionIds = ['flow','agents','standards','quickcheck'];
+window.addEventListener('scroll', () => {
+  const y = window.scrollY + 80;
+  sectionIds.forEach(id => {
+    const el = document.getElementById(id);
+    const link = document.querySelector(`.nav-link[href="#${id}"]`);
+    if(!el||!link) return;
+    if(y>=el.offsetTop && y<el.offsetTop+el.offsetHeight) {
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+});
+</script>
+</body>
+</html>

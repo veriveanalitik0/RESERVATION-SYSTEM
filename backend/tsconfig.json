@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "noEmitOnError": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "sourceMap": true,
+    "removeComments": false,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    // CommonJS + uzantısız relative import'lar → moduleResolution 'node10' (eski
+    // adı 'node') zorunlu (node16/nodenext tüm import'lara .js uzantısı ister).
+    // baseUrl kaldırıldı; paths tsconfig'e göre relative (deprecation azaltma).
+    // 'node10' güncel (deprecate edilmemiş) ad; ek ignoreDeprecations gerekmez.
+    "moduleResolution": "node10",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@klab/shared": ["../shared/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "scripts"]
+}

@@ -1,0 +1,45 @@
+{
+  "name": "klab-randevu-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "e2e": "playwright test",
+    "e2e:report": "playwright show-report"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.14.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.4",
+    "tailwind-merge": "^3.6.0"
+  },
+  "overrides": {
+    "react-router": "^6.30.4",
+    "esbuild": "^0.25.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
+    "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.60.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "globals": "^15.15.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.60.1",
+    "vite": "^5.4.11"
+  },
+  "//security": "vite 5.4.x dev-only path-traversal (GHSA) bilinçli ertelendi — gerekçe: docs/security/accepted-risks.md (AR-001). devDependency; prod nginx statik build'de vite çalışmaz."
+}

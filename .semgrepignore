@@ -1,0 +1,12 @@
+# SAST (Semgrep) kapsam dışı yollar.
+#
+# scripts/: tek-seferlik DEV araçları (kitap kapağı çekme/üretme). Deploy edilen
+# image'a (backend/Dockerfile.prod) KOPYALANMAZ → çalışma-zamanı attack surface
+# değildir. Yalnız güvenilir yerel dosyaları işler. SAST gürültüsünü önlemek için
+# hariç tutulur (uygulama kodu backend/src + frontend/src taranmaya devam eder).
+scripts/
+
+# Test fixture'ları ve build çıktıları
+**/dist/
+**/coverage/
+**/node_modules/

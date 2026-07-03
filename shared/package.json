@@ -1,0 +1,7 @@
+{
+  "name": "@klab/shared",
+  "version": "1.0.0",
+  "description": "Kuveyt Türk AI Lab — backend/frontend paylaşılan DTO tipleri (tek kaynak)",
+  "types": "index.d.ts",
+  "private": true
+}

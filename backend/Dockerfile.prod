@@ -1,0 +1,81 @@
+# syntax=docker/dockerfile:1
+# ============================================================================
+# Backend PRODUCTION image — docker-compose.prod.yml'in build ettiği DAĞITILAN image.
+# ----------------------------------------------------------------------------
+# TARANAN = DAĞITILAN: AppSec container-scan kök Dockerfile'ı (sertleştirilmiş
+# node:22-alpine) tarar; bu dosya AYNI sertleştirilmiş alpine recipe'ini kullanır
+# ki prod'a giden image taranan image ile birebir aynı temel/sertleştirme olsun.
+# (Önceden bu dosya node:22-bookworm-slim idi → debian base CVE'leri taranmayan
+#  bir image'da prod'a sızıyordu. Artık tek alpine recipe.)
+#
+# Sertleştirme (kök Dockerfile ile hizalı):
+#   - debian bookworm yerine alpine → düzeltilemez debian base CVE'leri YOK
+#   - build araçları (python3/make/g++) YALNIZ builder stage'inde
+#   - final stage'de npm/npx kaldırılır → npm bağımlılık CVE'leri image'dan elenir
+#   - ayrıcalıksız 'node' (uid 1000) kullanıcısı; data dizinleri node-sahipli
+#   - HEALTHCHECK readiness probe KORUNUR (orchestrator-agnostik, Node 22 fetch)
+#
+# Build context = repo KÖKÜ (shared/ tip kaynağına erişim için):
+#   docker build -f backend/Dockerfile.prod -t klab-backend:prod .
+# Dev image (backend/Dockerfile) ayrı kalır; bu dosya yalnız production içindir.
+# ============================================================================
+
+# ---- Stage 1: builder — TS derleme + üretim bağımlılıkları (musl native build) ----
+FROM node:22-alpine AS builder
+WORKDIR /app
+
+# Native modüller (argon2 vb.) alpine/musl'da prebuild inmezse kaynaktan derlenir.
+# Bu araçlar YALNIZ builder'da kalır; runtime image'ına taşınmaz.
+RUN apk add --no-cache python3 make g++
+
+# Önce manifest → bağımlılık katmanı cache'lenir (kaynak değişince npm ci tekrar koşmasın).
+COPY backend/package*.json ./
+RUN npm ci
+
+# Kaynak + paylaşılan tip kaynağı. tsconfig paths `../../shared/index.d.ts`
+# (baseUrl ./src) → /app/src/../../shared = /shared. Type-only; runtime'da silinir.
+COPY backend/tsconfig.json ./
+COPY backend/src ./src
+COPY shared /shared
+RUN npm run build
+
+# devDependencies'i çıkar — native binary'ler korunur, ağırlık düşer.
+RUN npm prune --omit=dev
+
+# Volume-mount için ayrıcalıksız sahipli data dizinleri (model cache + görseller).
+RUN mkdir -p /app/data/models /app/data/visuals
+
+# ---- Stage 2: runtime — yalın alpine, ayrıcalıksız ----
+FROM node:22-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+# Saat dilimi: randevu/cron tarih hesapları TR gününe göre çalışır.
+ENV TZ=Europe/Istanbul
+
+# Base alpine OS paketlerini yamalı sürümlere yükselt — base image tag'i tazelenene
+# kadar libcrypto3/libssl3 gibi openssl CVE'leri (ör. CVE-2026-45447) burada kapanır.
+# Node kendi OpenSSL'ini bundle ettiğinden bu OS paketleri uygulama tarafından
+# kullanılmaz; yükseltme yalnız Trivy HIGH sayısını 0'a indirir (davranış değişmez).
+RUN apk upgrade --no-cache
+
+# Prod runtime'da paket yöneticisi gerekmez. Gömülü npm/npx'i kaldır — hem saldırı
+# yüzeyini düşürür hem de npm'in kendi bağımlılıklarındaki CVE'leri (örn. picomatch)
+# image'dan tamamen eler. Uygulama yalnız `node dist/index.js` ile çalışır.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
+# node:alpine, hazır 'node' (uid 1000) kullanıcısı sağlar — ayrıcalıksız çalışır.
+# data/ dizini node-sahipli kopyalanır → buraya mount edilen named volume bu
+# sahipliği devralır (model cache + üretilen görseller node tarafından yazılabilir
+# olmalı; aksi halde EACCES). JWT anahtarları ve data image'e GÖMÜLMEZ → runtime'da
+# volume/secret ile mount edilir.
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/dist ./dist
+COPY --from=builder --chown=node:node /app/data ./data
+COPY --chown=node:node backend/package*.json ./
+
+USER node
+EXPOSE 4000
+# Orchestrator-agnostik healthcheck (Node 22 yerleşik fetch → DB-bağımlı readiness).
+HEALTHCHECK --interval=15s --timeout=5s --start-period=40s --retries=5 \
+  CMD node -e "fetch('http://127.0.0.1:4000/api/readiness').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "dist/index.js"]

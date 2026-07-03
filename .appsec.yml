@@ -1,0 +1,36 @@
+# AppSec pipeline manifest — Kuveyt Türk AI Lab · Randevu/Oda Kiralama
+#
+# Bu proje docker compose ile ayağa kalkar (postgres + backend + frontend).
+# Backend, RS256 JWT anahtarları (backend/keys/*.pem) ve PostgreSQL olmadan
+# boot etmez; bu yüzden start komutları compose akışına + anahtar üretimine göre
+# yazıldı (tek satırlık `docker run` bu mimaride yeterli değildir).
+#
+# Komutlar repo kökünden (docker-compose.yml'in yanından) çalıştırılır.
+
+language: nodejs
+dast: true
+
+components:
+  # --- Backend: Express + TypeScript (REST API) ---
+  # start: image'i derle → RS256 JWT keypair üret (idempotent, keys/ mount'a yazılır)
+  #        → postgres + backend'i başlat (db:init şema+seed otomatik yüklenir).
+  # İlk çalıştırmada `--build` npm install içerdiğinden birkaç dakika sürebilir.
+  - name: backend
+    port: 4000
+    start: >
+      docker compose build backend &&
+      docker compose run --rm --no-deps backend npm run keys:generate &&
+      docker compose up -d postgres backend
+    health: /api/health
+    wait_seconds: 90
+
+  # --- Frontend: React + Vite (dev sunucu, /api'yi backend'e proxy'ler) ---
+  # depends_on: backend → compose backend'i de garanti eder (zaten ayaktaysa idempotent).
+  # NOT: Daha üretim-temsili bir DAST için prod nginx build taranabilir:
+  #   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build frontend
+  #   (port 80, health: /)
+  - name: frontend
+    port: 5173
+    start: docker compose up -d --build frontend
+    health: /
+    wait_seconds: 90

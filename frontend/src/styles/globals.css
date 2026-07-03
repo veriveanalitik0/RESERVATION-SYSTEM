@@ -1,0 +1,469 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Scroll modeli: DOKÜMAN (html/window) scroll'lanır. body/#root height:100%
+     YAPILMAZ — aksi halde overflow-x:hidden ile birlikte body bir scroll
+     konteynerine dönüşüp window.scrollY'yi 0'a kilitliyor ve fixed arka planla
+     en altta istemsiz "yukarı zıplama" yaratıyordu. min-height ile içerik kadar
+     büyürler, kaydırma html üzerinde olur (window.scrollTo da düzgün çalışır). */
+  html {
+    height: 100%;
+    /* Dikey scrollbar her zaman yer ayırsın → içerik yüklenince scrollbar
+       belirip ortalanmış içeriği yana kaydırmaz ("git-gel/sallanma" düzeltmesi). */
+    scrollbar-gutter: stable;
+  }
+  body, #root {
+    min-height: 100%;
+  }
+  /* Yatay overflow'a karşı global güvenlik ağı — ken-burns animasyonu,
+     sığmayan nav vs. yan-scroll beyaz boşluk yaratmasın. Yalnız html'e
+     uygulanır; body'ye verirsek body'yi tekrar scroll konteyneri yapar. */
+  html {
+    overflow-x: hidden;
+  }
+  body {
+    @apply bg-white text-kt-green-900 font-sans antialiased;
+  }
+  *:focus-visible {
+    @apply outline-none ring-2 ring-kt-gold-400 ring-offset-2 ring-offset-white;
+  }
+  /* AI feel için scrollbar */
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { @apply bg-kt-gray-100; }
+  *::-webkit-scrollbar-thumb { @apply bg-kt-green-700 rounded-full; }
+  *::-webkit-scrollbar-thumb:hover { @apply bg-kt-green-600; }
+}
+
+@layer components {
+  /* ============ BUTONLAR ============ */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold
+           transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn text-white shadow-kt-green hover:shadow-glow-cyan active:scale-[0.98]
+           relative overflow-hidden;
+    background-image: linear-gradient(135deg, #6fb02c 0%, #579418 50%, #4a8020 100%);
+  }
+  .btn-primary:hover {
+    background-image: linear-gradient(135deg, #8fc850 0%, #6fb02c 50%, #579418 100%);
+  }
+  .btn-gold {
+    /* Eski "altın" rolü — şimdi parlak cyan/teal accent */
+    @apply btn bg-kt-gold-400 text-kt-green-950 hover:bg-kt-gold-300 shadow-kt-gold
+           hover:shadow-glow-cyan active:scale-[0.98] font-bold;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-kt-green-700 border border-kt-gray-200
+           hover:border-kt-gold-400 hover:text-kt-gold-600 hover:shadow-kt-soft;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-kt-green-700 hover:bg-kt-gold-50 hover:text-kt-gold-700;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600 text-white hover:bg-rose-700 active:scale-[0.98] shadow-md;
+  }
+  .btn-success {
+    @apply btn bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.98] shadow-md;
+  }
+
+  /* ============ PILL BUTONLAR (modern variant — referans: ethereal-beams-hero) ============
+     Mevcut .btn-* class'ları korunuyor (geri uyumluluk). Yeni .btn-pill-* class'ları
+     hero CTA, login submit, landing eylem butonları gibi öne çıkan yerlerde kullanılır.
+     Tüm variant'lar opsiyonel shimmer sweep efekti taşır (hover → soldan sağa hafif
+     ışık geçişi). Stil sade ve profesyonel — neon glow yok, solid renk + ince shadow.
+     Tasarım dili: ethereal-beams-hero (siyah/beyaz monokrom, hafif glass, subtle hover). */
+  .btn-pill {
+    @apply relative inline-flex items-center justify-center gap-2 rounded-full
+           font-medium tracking-tight transition-all duration-200
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kt-gold-400/40
+           disabled:pointer-events-none disabled:opacity-50 overflow-hidden;
+  }
+  /* Filled — primary (deep navy, solid). Sade ve premium hissi. */
+  .btn-pill-primary {
+    @apply btn-pill bg-kt-green-900 text-white
+           hover:bg-kt-green-800 shadow-sm hover:shadow;
+  }
+  /* Filled — gold accent (highlight CTA) — solid, glow yok */
+  .btn-pill-gold {
+    @apply btn-pill bg-kt-gold-400 text-kt-green-950
+           hover:bg-kt-gold-300 shadow-sm hover:shadow font-semibold;
+  }
+  /* Outline glass — dark theme (hero, landing, login bg üstünde) */
+  .btn-pill-outline-dark {
+    @apply btn-pill text-white border border-white/20 bg-white/5 backdrop-blur-xl
+           hover:bg-white/10 hover:border-kt-gold-400/60 hover:shadow-glow-cyan;
+  }
+  /* Outline solid — light theme (white bg üstünde) */
+  .btn-pill-outline-light {
+    @apply btn-pill text-kt-green-800 border border-kt-gray-200 bg-white
+           hover:border-kt-gold-400 hover:text-kt-gold-700 hover:shadow-kt-soft;
+  }
+  /* Ghost — dark theme */
+  .btn-pill-ghost-dark {
+    @apply btn-pill text-white/90 hover:text-white hover:bg-white/10;
+  }
+  /* Ghost — light theme */
+  .btn-pill-ghost-light {
+    @apply btn-pill text-kt-green-700 hover:bg-kt-gold-50 hover:text-kt-gold-700;
+  }
+  /* Sizes — xs (dashboard action chip); sm default; md (orta); lg (hero) */
+  .btn-pill-xs { @apply h-8 px-3.5 text-[13px] font-semibold; }
+  .btn-pill-sm { @apply h-9 px-4 text-sm; }
+  .btn-pill-md { @apply h-11 px-6 text-base; }
+  .btn-pill-lg { @apply h-14 px-8 text-lg font-semibold; }
+
+  /* Semantic pill variants — dashboard action chip'leri (onayla/reddet/revize/swat).
+     Sade solid renk + subtle shadow. Gradient ve neon glow yok — ethereal-beams-hero
+     tarzı profesyonel monokrom hissiyatı. Renk sadece semantik ipucu olarak
+     kullanılıyor; vurgu için boyut/pozisyon yeterli.
+       success → emerald (Onayla)
+       danger  → rose    (Reddet)
+       warning → amber   (Revize iste)
+       info    → violet  (SWAT'a gönder) */
+  .btn-pill-success {
+    @apply btn-pill bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm;
+  }
+  .btn-pill-danger {
+    @apply btn-pill bg-rose-600 text-white hover:bg-rose-700 shadow-sm;
+  }
+  .btn-pill-warning {
+    @apply btn-pill bg-amber-500 text-white hover:bg-amber-600 shadow-sm;
+  }
+  .btn-pill-info {
+    @apply btn-pill bg-violet-600 text-white hover:bg-violet-700 shadow-sm;
+  }
+  /* Neutral outline pill — light theme, "Reddet" gibi düşük-vurgu aksiyonlar için */
+  .btn-pill-neutral {
+    @apply btn-pill bg-white text-kt-gray-700 border border-kt-gray-200
+           hover:border-kt-gray-300 hover:bg-kt-gray-50 hover:text-kt-green-800;
+  }
+
+  /* ============ ROLE BADGE (dashboard üst rol etiketi) ============
+     "Analitik Danışman", "YZ / Ar-Ge Mühendisi", "Yönetici" gibi rolleri
+     sade ve profesyonel şekilde gösterir. Düz renkli pill — neon glow yok,
+     sadece ince border. Animasyonlu nokta opsiyonel olarak korunuyor. */
+  .role-badge {
+    @apply relative inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full
+           text-[11px] font-bold uppercase tracking-[0.18em]
+           border transition-colors duration-200 mb-2;
+  }
+  .role-badge-cyan {
+    @apply role-badge text-cyan-700 border-cyan-200 bg-cyan-50;
+  }
+  .role-badge-violet {
+    @apply role-badge text-violet-700 border-violet-200 bg-violet-50;
+  }
+  .role-badge-gold {
+    @apply role-badge text-amber-800 border-amber-200 bg-amber-50;
+  }
+  .role-badge-dot {
+    @apply w-1.5 h-1.5 rounded-full;
+  }
+
+  /* Shimmer sweep — pill içerisinde absolute span olarak konur.
+     Parent .btn-pill:hover ile tetiklenir. ethereal-beams-hero referansındaki gibi
+     ÇOK hafif (via-white/15) — fazla parlamasın, profesyonel kalsın.
+     Kullanım: <button class="btn-pill-primary btn-pill-lg">
+                 <span class="btn-pill-shimmer" />
+                 <span class="relative z-10">İçerik</span>
+               </button> */
+  .btn-pill-shimmer {
+    @apply absolute inset-0 -top-2 -bottom-2 pointer-events-none
+           bg-gradient-to-r from-transparent via-white/15 to-transparent
+           skew-x-12;
+    transform: translateX(-100%);
+    transition: transform 1000ms ease-out;
+  }
+  .btn-pill:hover .btn-pill-shimmer {
+    transform: translateX(100%);
+  }
+
+  /* ============ GLASS NAV PILL (multi-link pill container) ============
+     Kullanım: <nav class="nav-glass-pills"> <a class="nav-glass-pill">…</a> </nav>
+     Hero/landing'de "Home / Components / Templates / Docs" tarzı dark-mode menü için. */
+  .nav-glass-pills {
+    @apply inline-flex items-center gap-1 rounded-full bg-white/5
+           backdrop-blur-xl border border-white/10 p-1;
+  }
+  .nav-glass-pill {
+    @apply rounded-full px-4 py-2 text-sm font-medium text-white/85
+           transition-all hover:bg-white/10 hover:text-white;
+  }
+  .nav-glass-pill-active {
+    @apply nav-glass-pill bg-white/15 text-white shadow-inner;
+  }
+
+  /* ============ GLASS BADGE (dark theme — landing/hero için) ============
+     Mevcut .badge-* (rounded-full pill, light-theme) yan yana yaşar.
+     Glass variant koyu/saydam zeminlerde kullanılır. */
+  .badge-glass-dark {
+    @apply inline-flex items-center gap-2 rounded-full bg-white/5
+           backdrop-blur-xl border border-white/10 px-4 py-2 text-sm text-white/90;
+  }
+  .badge-glass-gold {
+    @apply inline-flex items-center gap-2 rounded-full
+           bg-kt-gold-400/15 text-kt-gold-200
+           border border-kt-gold-400/40 backdrop-blur-sm
+           px-4 py-2 text-sm font-semibold shadow-glow-cyan;
+  }
+
+  /* ============ HERO TYPOGRAPHY ============
+     Büyük başlıklar için tutarlı bir base. Renkleri override etmek için Tailwind
+     class'larıyla birleştirilir; .text-shimmer ile vurgu kelimesi öne çıkarılır. */
+  .h-hero {
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl
+           font-extrabold tracking-tight leading-[1.05] text-balance;
+  }
+  .h-hero-sub {
+    @apply text-xs sm:text-sm md:text-base
+           leading-relaxed text-balance max-w-3xl mx-auto;
+  }
+
+  /* ============ INPUT'LAR ============ */
+  .input {
+    @apply w-full px-4 py-2.5 rounded-xl border border-kt-gray-200 bg-white text-kt-green-900
+           placeholder:text-kt-gray-400 transition-all duration-200
+           focus:border-kt-gold-400 focus:ring-2 focus:ring-kt-gold-400/30 outline-none;
+  }
+  .input-dark {
+    @apply input bg-kt-green-900/40 border-kt-green-700/40 text-white
+           placeholder:text-kt-gray-400 backdrop-blur-sm
+           focus:border-kt-gold-400 focus:ring-kt-gold-400/40;
+  }
+  .textarea {
+    @apply input resize-none min-h-[100px] font-sans;
+  }
+  .label {
+    @apply block text-sm font-semibold text-kt-green-800 mb-1.5;
+  }
+
+  /* ============ CARD'LAR ============ */
+  .card {
+    @apply bg-white rounded-2xl shadow-kt-soft border border-kt-gray-100;
+  }
+  .card-hover {
+    @apply card transition-all duration-300 hover:shadow-kt-card hover:-translate-y-0.5
+           hover:border-kt-gold-300;
+  }
+  .card-dark {
+    @apply rounded-2xl border border-kt-green-700/40 text-white shadow-kt-card;
+    background-image: linear-gradient(180deg, #1E293B 0%, #0F1E3D 100%);
+  }
+
+  /* ============ BADGE'LER ============ */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+  .badge-pending      { @apply badge bg-amber-100 text-amber-800; }
+  .badge-approved     { @apply badge bg-emerald-100 text-emerald-800; }
+  .badge-rejected     { @apply badge bg-rose-100 text-rose-800; }
+  .badge-feedback     { @apply badge bg-kt-gold-100 text-kt-gold-800; }
+  .badge-available    { @apply badge bg-emerald-100 text-emerald-700; }
+  .badge-unavailable  { @apply badge bg-kt-gray-200 text-kt-gray-600; }
+  .badge-ai           { @apply badge bg-gradient-to-r from-kt-gold-400/20 to-kt-violet-500/20 text-kt-gold-700 border border-kt-gold-300/40; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { @apply bg-kt-green-700/40 rounded-full; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { @apply bg-kt-green-600/60; }
+
+  /* ============ AI UTILITY'LER ============ */
+
+  /* Neural grid background */
+  .bg-neural-grid {
+    background-image:
+      linear-gradient(rgba(111, 176, 44, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(111, 176, 44, 0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .bg-neural-grid-dark {
+    background-image:
+      linear-gradient(rgba(111, 176, 44, 0.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(111, 176, 44, 0.10) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Hexagon / circuit dot pattern */
+  .bg-circuit-dots {
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(111, 176, 44, 0.18) 1px, transparent 0);
+    background-size: 28px 28px;
+  }
+
+  /* Animated shimmer text (gradient slide) */
+  .text-shimmer {
+    background: linear-gradient(
+      90deg,
+      #6fb02c 0%,
+      #8fc850 25%,
+      #b6dd8a 50%,
+      #8fc850 75%,
+      #6fb02c 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: shimmer 4s linear infinite;
+  }
+
+  /* Glow text - accent edebilmek için */
+  .text-glow-cyan {
+    color: #b6dd8a;
+    text-shadow:
+      0 0 8px rgba(111, 176, 44, 0.55),
+      0 0 18px rgba(111, 176, 44, 0.30);
+  }
+
+  /* Glass / frosted card */
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/15;
+  }
+  .glass-dark {
+    @apply bg-kt-green-950/55 backdrop-blur-md border border-kt-gold-400/15;
+  }
+
+  /* Inner border glow for cards (AI-themed accent) */
+  .ring-glow {
+    box-shadow:
+      0 0 0 1px rgba(111, 176, 44, 0.40),
+      0 0 18px rgba(111, 176, 44, 0.25);
+  }
+
+  /* Animated horizontal scan line — kullanım: .scan-overlay > div ile inside */
+  .scan-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(111, 176, 44, 0.15) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+    animation: scanLine 4s linear infinite;
+  }
+
+  /* Holographic gradient border (use as wrapper) */
+  .holo-border {
+    position: relative;
+    background:
+      linear-gradient(#0F1E3D, #0F1E3D) padding-box,
+      linear-gradient(135deg, #6fb02c, #A855F7, #b6dd8a) border-box;
+    border: 1px solid transparent;
+  }
+
+  /* Subtle glow for hover'da */
+  .hover-glow:hover {
+    box-shadow: 0 0 24px rgba(111, 176, 44, 0.40);
+  }
+
+  /* "AI Lab" gold ring — eski .btn-primary ring */
+  .ring-ai {
+    box-shadow:
+      inset 0 0 0 1px rgba(111, 176, 44, 0.55),
+      0 0 14px rgba(111, 176, 44, 0.30);
+  }
+
+  /* ============================================================
+   * BEYAZ FÜTÜRİSTİK ARKA PLAN (login sonrası sayfalar için)
+   * ============================================================
+   * Logo'nun arka planındaki AI temasının AÇIK RENK versiyonu —
+   * `/public/ai-lab-bg-light.jpg` (circuit board + neural mesh,
+   * cyan/blue tonda, beyaz dominant). Sayfanın tamamına fixed olarak
+   * uygulanır → scroll'da hareket etmez, sade dural bir vibe verir.
+   *
+   * Üzerine: yumuşak floating orb'lar (animate edilir) + yarı şeffaf
+   * beyaz veil (içerik okunabilirliği için).
+   */
+  .bg-ai-light {
+    position: relative;
+    background-color: #f7faff; /* görselin yüklenmediği saniyeler için fallback */
+    background-image: url('/ai-lab-bg-light.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  /* Yarı şeffaf beyaz veil — circuit pattern hafif kalır, içerik öne çıkar.
+     position: FIXED (absolute değil): viewport'a sabit → doküman scroll
+     yüksekliğine katkı vermez. Aksi halde ::after'daki meshShift translate/scale
+     animasyonu tüm-doküman yüksekliğindeki katmanı taşırıp en altta beyaz boşluk
+     + scroll alanı oynaması ("yavaş yukarı kayma") yaratıyordu. */
+  .bg-ai-light::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.40) 50%, rgba(255, 255, 255, 0.55) 100%),
+      radial-gradient(ellipse 900px 600px at 15% 10%, rgba(111, 176, 44, 0.06) 0%, transparent 55%),
+      radial-gradient(ellipse 800px 500px at 85% 90%, rgba(168, 85, 247, 0.05) 0%, transparent 55%);
+  }
+
+  /* Animated floating orbs — sade fütüristik canlılık.
+     position: FIXED (yukarıdaki ::before ile aynı sebep) — meshShift translate/scale
+     artık viewport içinde kalır, doküman yüksekliğini uzatmaz. */
+  .bg-ai-light::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(ellipse 380px 280px at 22% 25%, rgba(111, 176, 44, 0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 320px 260px at 78% 75%, rgba(168, 85, 247, 0.08) 0%, transparent 55%);
+    animation: meshShift 22s ease-in-out infinite;
+  }
+}
+
+/* ============================================================
+ * ERİŞİLEBİLİRLİK — HAREKET AZALTMA (WCAG 2.3.3 Animation from Interactions)
+ * ============================================================
+ * Kullanıcı işletim sisteminde "hareketi azalt" tercihini açtıysa,
+ * vestibüler hassasiyeti tetikleyebilecek sürekli / süslü animasyonları
+ * kapat veya çok kısalt. Tek seferlik geçişler (fade-in/slide-up) zararsız
+ * olduğundan minimal süreye indirgenir; sürekli dönen/yüzen/parıldayan
+ * efektler tamamen durdurulur.
+ *
+ * @layer DIŞINDA tanımlı + !important → tüm utility/komponent animasyonlarını
+ * güvenle override eder. */
+@media (prefers-reduced-motion: reduce) {
+  /* Genel güvenlik ağı: tüm animasyon ve geçişleri neredeyse anlık yap. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Sürekli dönen / yüzen / parıldayan süslü efektleri tamamen durdur. */
+  .animate-ken-burns,
+  .animate-mesh-shift,
+  .animate-float-slow,
+  .animate-float-medium,
+  .animate-glow-pulse,
+  .animate-pulse-gold,
+  .animate-neural-flow,
+  .animate-scan-line,
+  .animate-circuit-trace,
+  .animate-orbit,
+  .animate-shimmer,
+  .animate-spotlight,
+  .text-shimmer,
+  .scan-overlay::after,
+  .bg-ai-light::after {
+    animation: none !important;
+  }
+}
