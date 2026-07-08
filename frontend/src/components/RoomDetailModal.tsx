@@ -51,9 +51,13 @@ interface Props {
   onBook?: (room: Room) => void;
   /** "Doluluk sonrası randevu al" — oda doluysa, belirtilen tarihten randevu modalı açar. */
   onBookAfter?: (room: Room, startDate: string) => void;
+  /** Aktif tarih filtresi — verilirse müsaitlik detayı da AYNI aralığa göre
+   * çekilir; yoksa liste (isAvailable) ile modal çelişebilirdi. */
+  fromDate?: string;
+  toDate?: string;
 }
 
-export function RoomDetailModal({ room, open, onClose, onBook, onBookAfter }: Props) {
+export function RoomDetailModal({ room, open, onClose, onBook, onBookAfter, fromDate, toDate }: Props) {
   const [availability, setAvailability] = useState<RoomAvailability | null>(null);
   const [availLoading, setAvailLoading] = useState(false);
 
@@ -66,7 +70,7 @@ export function RoomDetailModal({ room, open, onClose, onBook, onBookAfter }: Pr
     setAvailLoading(true);
     setAvailability(null);
     api
-      .roomAvailability(room.id)
+      .roomAvailability(room.id, fromDate ? { from: fromDate, to: toDate || undefined } : undefined)
       .then((res) => {
         if (!cancelled) setAvailability(res);
       })
@@ -79,7 +83,17 @@ export function RoomDetailModal({ room, open, onClose, onBook, onBookAfter }: Pr
     return () => {
       cancelled = true;
     };
-  }, [open, room]);
+  }, [open, room, fromDate, toDate]);
+
+  // Escape ile kapat — krokinin bilgi kartı ve uygulamadaki diğer modallarla tutarlı.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
 
   if (!open || !room) return null;
   const specs = parseSpecs(room.specs);
@@ -92,6 +106,7 @@ export function RoomDetailModal({ room, open, onClose, onBook, onBookAfter }: Pr
       role="dialog"
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={onClose}
     >
       <div
         className="bg-white rounded-2xl shadow-kt-card max-w-lg w-full max-h-[90vh] overflow-y-auto"

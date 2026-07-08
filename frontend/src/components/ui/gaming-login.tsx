@@ -11,7 +11,7 @@ interface LoginFormProps {
   onPasswordChange: (v: string) => void;
   onRememberChange: (v: boolean) => void;
   onSubmit: (e: React.FormEvent) => void;
-  onDemoFill?: (which: 'user' | 'admin' | 'danisman' | 'arge' | 'izleyici' | 'mehmet' | 'furkan' | 'fatih') => void;
+  onDemoFill?: (which: 'user' | 'admin' | 'danisman' | 'arge' | 'izleyici' | 'ayberk' | 'furkan' | 'fatih') => void;
   onHomeClick?: () => void;
   registerHref?: string;
   forgotHref?: string;
@@ -289,9 +289,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
               {onDemoFill && (
                 <QuickButton
                   icon={<UserRound size={18} />}
-                  label="Mehmet"
-                  title="Mehmet Murat Huyut hesabını doldur"
-                  onClick={() => onDemoFill('mehmet')}
+                  label="Ayberk"
+                  title="Ayberk Burak Yardımcı hesabını doldur"
+                  onClick={() => onDemoFill('ayberk')}
                 />
               )}
               {onDemoFill && (

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
 import { BookingModal } from '../components/BookingModal';
@@ -13,6 +13,23 @@ import { FEATURES } from '../constants/features';
 import type { CreateBookingPayload, JoinWaitlistPayload, Room } from '../types';
 
 const WEEKDAY_LABELS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+
+// Kroki görünümü ağır (SVG + isteğe bağlı three.js) — yalnız açılınca yüklensin.
+// Chunk yüklenemezse (ör. dağıtım sonrası bayat hash) boş sayfa yerine
+// kullanıcıyı kart görünümüne yönlendiren bir hata kartı göster.
+const RoomFloorPlan = lazy(() =>
+  import('../components/floorplan/RoomFloorPlan').catch(() => ({
+    default: () => (
+      <div className="card p-12 text-center">
+        <div className="text-4xl mb-3">🗺️</div>
+        <h3 className="text-lg font-bold text-kt-green-800 mb-1">Kroki yüklenemedi</h3>
+        <p className="text-sm text-kt-gray-500">
+          Sayfayı yenileyin veya kart görünümünü kullanın.
+        </p>
+      </div>
+    ),
+  }))
+);
 
 type CategoryKey = 'all' | 'pod1' | 'pod2' | 'experience' | 'tribune';
 
@@ -31,6 +48,14 @@ export default function UserRooms() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'available'>('all');
   const [category, setCategory] = useState<CategoryKey>('all');
+  // Görünüm: kart ızgarası veya interaktif kroki (tercih hatırlanır).
+  const [view, setView] = useState<'cards' | 'plan'>(() =>
+    localStorage.getItem('rooms.view') === 'plan' ? 'plan' : 'cards'
+  );
+  const switchView = (v: 'cards' | 'plan') => {
+    setView(v);
+    localStorage.setItem('rooms.view', v);
+  };
   // Tarih ARALIĞI filtresi: oda [başlangıç, bitiş] boyunca müsaitse listelenir.
   const [filterStart, setFilterStart] = useState('');
   const [filterEnd, setFilterEnd] = useState('');
@@ -158,39 +183,74 @@ export default function UserRooms() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-kt-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            <input
-              type="search"
-              className="input pl-11"
-              placeholder="Oda adı veya kod ile ara..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              maxLength={60}
-            />
-          </div>
+          {view === 'cards' && (
+            <div className="relative flex-1">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-kt-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              <input
+                type="search"
+                className="input pl-11"
+                placeholder="Oda adı veya kod ile ara..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                maxLength={60}
+              />
+            </div>
+          )}
+          {view === 'plan' && <div className="flex-1" />}
           <div className="flex gap-2">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-                filter === 'all' ? 'bg-kt-green-800 text-white' : 'bg-white border border-kt-gray-200 text-kt-green-700'
-              }`}
-            >
-              Tümü ({rooms.length})
-            </button>
-            <button
-              onClick={() => setFilter('available')}
-              className={`px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-                filter === 'available' ? 'bg-emerald-600 text-white' : 'bg-white border border-kt-gray-200 text-kt-green-700'
-              }`}
-            >
-              Müsait ({availableCount})
-            </button>
+            {view === 'cards' && (
+              <>
+                <button
+                  onClick={() => setFilter('all')}
+                  className={`px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+                    filter === 'all' ? 'bg-kt-green-800 text-white' : 'bg-white border border-kt-gray-200 text-kt-green-700'
+                  }`}
+                >
+                  Tümü ({rooms.length})
+                </button>
+                <button
+                  onClick={() => setFilter('available')}
+                  className={`px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+                    filter === 'available' ? 'bg-emerald-600 text-white' : 'bg-white border border-kt-gray-200 text-kt-green-700'
+                  }`}
+                >
+                  Müsait ({availableCount})
+                </button>
+              </>
+            )}
+            {/* Görünüm anahtarı: kart ızgarası ↔ interaktif kroki */}
+            <div className="flex items-center gap-1 rounded-xl border border-kt-gray-200 bg-white p-1" role="group" aria-label="Görünüm seçimi">
+              <button
+                onClick={() => switchView('cards')}
+                aria-pressed={view === 'cards'}
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                  view === 'cards' ? 'bg-kt-green-800 text-white' : 'text-kt-gray-600 hover:text-kt-green-800'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Kart
+              </button>
+              <button
+                onClick={() => switchView('plan')}
+                aria-pressed={view === 'plan'}
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                  view === 'plan' ? 'bg-kt-green-800 text-white' : 'text-kt-gray-600 hover:text-kt-green-800'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                Kroki
+              </button>
+            </div>
           </div>
         </div>
 
+        {view === 'cards' && (
         <div className="flex flex-wrap gap-2 mt-3">
           {CATEGORY_FILTERS.map((c) => {
             const count =
@@ -212,6 +272,7 @@ export default function UserRooms() {
             );
           })}
         </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-2 mt-3">
           <span className="text-xs font-semibold text-kt-gray-600">Tarih aralığında müsait:</span>
@@ -255,9 +316,15 @@ export default function UserRooms() {
                 Temizle
               </button>
               <span className="text-xs text-kt-gray-500">
-                {rangeLabel} arası müsait odalar
-                {hiddenBusyOnDate > 0 && (
-                  <span className="text-kt-gold-700"> · {hiddenBusyOnDate} dolu oda gizlendi</span>
+                {view === 'cards' ? (
+                  <>
+                    {rangeLabel} için müsait odalar
+                    {hiddenBusyOnDate > 0 && (
+                      <span className="text-kt-gold-700"> · {hiddenBusyOnDate} dolu oda gizlendi</span>
+                    )}
+                  </>
+                ) : (
+                  <>Kroki müsaitliği {rangeLabel} için gösteriliyor</>
                 )}
               </span>
             </>
@@ -265,7 +332,30 @@ export default function UserRooms() {
         </div>
       </div>
 
-      {loading ? (
+      {view === 'plan' ? (
+        // Yalnız İLK yüklemede iskelet göster: sonraki yenilemelerde (gerçek
+        // zamanlı olaylar, tarih filtresi) kroki YERİNDE kalır ve veriler
+        // içeride güncellenir — aksi hâlde 3D sahne her seferinde yıkılırdı.
+        rooms.length === 0 && loading ? (
+          <div className="card p-12 text-center animate-pulse">
+            <div className="text-kt-gray-500">Kroki yükleniyor…</div>
+          </div>
+        ) : (
+          <Suspense
+            fallback={
+              <div className="card p-12 text-center animate-pulse">
+                <div className="text-kt-gray-500">Kroki yükleniyor…</div>
+              </div>
+            }
+          >
+            <RoomFloorPlan
+              rooms={rooms}
+              onRoomSelect={(room) => setDetailRoom(room)}
+              rangeLabel={filterStart ? rangeLabel : undefined}
+            />
+          </Suspense>
+        )
+      ) : loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="card p-5 animate-pulse">
@@ -485,6 +575,8 @@ export default function UserRooms() {
       <RoomDetailModal
         room={detailRoom}
         open={!!detailRoom}
+        fromDate={filterStart || undefined}
+        toDate={filterEnd || undefined}
         onClose={() => setDetailRoom(null)}
         onBook={(r) => {
           setDetailRoom(null);

@@ -101,7 +101,7 @@ function loadConfig(): AppConfig {
     }
     if (process.env.ALLOW_PROD_SEED === 'true') {
       // logger config'i import ettiğinden burada console kullanılır (circular import'tan kaçınma).
-      // eslint-disable-next-line no-console
+       
       console.warn('[CONFIG] UYARI: ALLOW_PROD_SEED=true → demo seed prod DB\'ye yüklenebilir. Yalnız ilk kurulum için açın.');
     }
   }

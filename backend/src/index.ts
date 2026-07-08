@@ -23,7 +23,7 @@ async function start(): Promise<void> {
   const migrationResult = await initSchema();
   logger.info('schema_ready', { applied: migrationResult.applied });
   if (migrationResult.applied.length > 0) {
-    // eslint-disable-next-line no-console
+     
     console.log(`[KLAB] Uygulanan migrationlar: ${migrationResult.applied.join(', ')}`);
   }
 
@@ -62,7 +62,7 @@ async function start(): Promise<void> {
       port: config.port,
       env: config.nodeEnv,
     });
-    // eslint-disable-next-line no-console
+     
     console.log(`\n[KLAB] Backend hazır → http://${config.host}:${config.port}\n`);
   });
 
@@ -117,7 +117,7 @@ async function start(): Promise<void> {
 }
 
 start().catch((err) => {
-  // eslint-disable-next-line no-console
+   
   console.error('[KLAB] Başlatma hatası:', err);
   process.exit(1);
 });

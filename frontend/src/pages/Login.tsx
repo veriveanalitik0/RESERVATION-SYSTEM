@@ -110,7 +110,7 @@ export default function Login() {
     }
   }
 
-  function fillDemo(which: 'user' | 'admin' | 'danisman' | 'arge' | 'izleyici' | 'mehmet' | 'furkan' | 'fatih') {
+  function fillDemo(which: 'user' | 'admin' | 'danisman' | 'arge' | 'izleyici' | 'ayberk' | 'furkan' | 'fatih') {
     if (which === 'user') {
       setEmail('user@klab.test');
       setPassword('Demo1234!Pass');
@@ -125,9 +125,9 @@ export default function Login() {
       // Gözlem Yetkilisi — governance_role: izleyici (seed, salt-okunur)
       setEmail('izleyici@klab.test');
       setPassword('Izleyici1234!');
-    } else if (which === 'mehmet') {
-      setEmail('mehmet.huyut@klab.test');
-      setPassword('Mehmet1234!Pass');
+    } else if (which === 'ayberk') {
+      setEmail('ayberk.yardimci@klab.test');
+      setPassword('Ayberk1234!Pass');
     } else if (which === 'furkan') {
       setEmail('furkan.kocal@klab.test');
       setPassword('Furkan1234!Pass');

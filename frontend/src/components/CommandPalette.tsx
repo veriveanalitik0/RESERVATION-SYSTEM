@@ -138,7 +138,7 @@ export function CommandPalette({ kind }: Props) {
       } else {
         const [bookings, users] = await Promise.all([
           api.listAdminBookings(),
-          api.adminListUsers().catch(() => ({ users: [] as any[] })),
+          api.adminListUsers().catch(() => ({ users: [] }) as Awaited<ReturnType<typeof api.adminListUsers>>),
         ]);
         const items: Command[] = [];
         for (const b of bookings.bookings.slice(0, 30)) {

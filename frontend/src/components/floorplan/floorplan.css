@@ -1,0 +1,196 @@
+/* AI Lab kat planı (kroki) — kapsamı .fp- önekiyle sınırlı stiller.
+   SVG oda etkileşimleri Kroki projesinden uyarlandı; panel uygulamanın
+   koyu-yeşil "maket görüntüleyici" çerçevesine oturur. */
+
+.fp-panel {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid #164836;
+  background:
+    radial-gradient(1100px 620px at 84% -10%, rgba(111, 176, 44, 0.18), transparent 58%),
+    radial-gradient(900px 700px at -8% 112%, rgba(249, 115, 22, 0.1), transparent 55%),
+    linear-gradient(180deg, #08281b 0%, #051710 100%);
+}
+
+.fp-stage {
+  position: relative;
+  overflow: auto;
+  padding: clamp(12px, 2.5vw, 28px);
+  background: radial-gradient(130% 120% at 50% -5%, #0c3324 0%, #072016 70%);
+  scrollbar-color: #215e47 transparent;
+}
+.fp-canvas {
+  min-width: 320px;
+  margin: 0 auto;
+  transition: width 0.18s ease;
+}
+
+.fp-sheet {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  display: block;
+  box-shadow:
+    0 30px 70px -26px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(58, 214, 129, 0.18),
+    0 0 60px -20px rgba(39, 179, 104, 0.25);
+}
+.fp-sheet svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* mimari katman */
+.fp-wall { fill: none; stroke: #13251c; stroke-width: 6; stroke-linejoin: round; stroke-linecap: square; }
+.fp-iwall { fill: none; stroke: #13251c; stroke-width: 6; stroke-linejoin: round; }
+.fp-dwall { fill: none; stroke: #13251c; stroke-width: 5; stroke-dasharray: 20 16; stroke-linecap: round; }
+.fp-col { fill: #13251c; }
+.fp-gtext { font-weight: 700; fill: #20372c; letter-spacing: 0.02em; }
+
+/* odalar */
+.fp-room { cursor: pointer; }
+.fp-room .fp-shape {
+  stroke: #13251c;
+  stroke-width: 6;
+  stroke-linejoin: round;
+  transition: stroke 0.15s, stroke-width 0.15s, filter 0.15s, fill 0.15s, opacity 0.22s;
+  pointer-events: all;
+}
+.fp-room.fp-plain .fp-shape { stroke: none; fill: transparent; }
+.fp-room text { pointer-events: none; font-weight: 700; }
+
+.fp-room:hover .fp-shape,
+.fp-room:focus-visible .fp-shape { filter: drop-shadow(0 0 10px #f2921c); }
+.fp-room:not(.fp-plain):hover .fp-shape,
+.fp-room:not(.fp-plain):focus-visible .fp-shape { stroke: #f2921c; stroke-width: 13; }
+.fp-room.fp-plain:hover .fp-shape,
+.fp-room.fp-plain:focus-visible .fp-shape { fill: rgba(242, 146, 28, 0.18); }
+.fp-room:focus { outline: none; }
+.fp-room.fp-sel .fp-shape { filter: drop-shadow(0 0 13px #f2921c); }
+.fp-room:not(.fp-plain).fp-sel .fp-shape { stroke: #f2921c; stroke-width: 14; }
+.fp-room.fp-plain.fp-sel .fp-shape { fill: rgba(242, 146, 28, 0.18); }
+
+.fp-rooms.fp-dim .fp-room:not(.fp-on) { opacity: 0.14; }
+.fp-rooms.fp-dim .fp-room:not(.fp-on) text { opacity: 0.4; }
+
+/* 2D tooltip — modalların (z-50) ALTINDA kalmalı */
+.fp-tip {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  background: rgba(6, 22, 15, 0.94);
+  border: 1px solid #215e47;
+  color: #eaf4ee;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 10px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.12s, transform 0.12s;
+  max-width: 280px;
+}
+.fp-tip.on { opacity: 1; transform: none; }
+.fp-tip small { color: #9dc1ae; font-weight: 500; margin-left: 6px; }
+
+/* 3D görünüm */
+.fp-3d {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+.fp-3d canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  /* dokunmatikte tek parmak sürükleme sahneyi döndürsün, sayfayı kaydırmasın */
+  touch-action: none;
+}
+
+.fp3-tip {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  background: rgba(6, 22, 15, 0.94);
+  border: 1px solid #215e47;
+  color: #eaf4ee;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 10px;
+  opacity: 0;
+  transition: opacity 0.12s;
+  max-width: 280px;
+  left: 0;
+  top: 0;
+}
+.fp3-tip.on { opacity: 1; }
+
+.fp3-hint {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  z-index: 15;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: #9dc1ae;
+  background: rgba(6, 22, 15, 0.72);
+  border: 1px solid #164836;
+  border-radius: 10px;
+  padding: 6px 12px;
+  pointer-events: none;
+}
+.fp3-hint b { color: #eaf4ee; font-weight: 700; margin-right: 4px; }
+
+/* panel üst çubuğu */
+.fp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #215e47;
+  color: #9dc1ae;
+  background: rgba(15, 55, 40, 0.55);
+  transition: all 0.15s;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fp-chip:hover { border-color: #3ad681; color: #eaf4ee; }
+.fp-chip[aria-pressed='true'] {
+  background: rgba(58, 214, 129, 0.16);
+  border-color: rgba(58, 214, 129, 0.6);
+  color: #eaf4ee;
+}
+.fp-chip .fp-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+
+.fp-zbtn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #215e47;
+  background: rgba(15, 55, 40, 0.55);
+  color: #eaf4ee;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.fp-zbtn:hover { border-color: #3ad681; }
+.fp-zlabel {
+  min-width: 46px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9dc1ae;
+  font-variant-numeric: tabular-nums;
+}

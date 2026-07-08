@@ -20,7 +20,7 @@ import { recordAudit } from './audit.service';
 import { recordStageEvent } from './governance.service';
 import { logger } from '../utils/logger';
 import { maskToWeekdays, weekdaysToMask } from '../utils/weekdays';
-import { addMonthsEndDate, periodEndDate } from '../utils/dates';
+import { periodEndDate } from '../utils/dates';
 
 import type { Booking as SharedBooking, LifecycleStage } from '@klab/shared';
 

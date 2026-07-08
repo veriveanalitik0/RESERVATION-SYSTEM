@@ -74,7 +74,7 @@ function pgPoolHandle(): any {
   if (!url) {
     throw new Error('DATABASE_URL gerekli — sistem yalnız PostgreSQL ile çalışır.');
   }
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const pg = require('pg');
   // COUNT(*) vb. bigint (OID 20) varsayılan string döner → SQLite gibi number yap.
   // (id/sayım değerleri küçük; precision kaybı yok. int4 zaten number döner.)

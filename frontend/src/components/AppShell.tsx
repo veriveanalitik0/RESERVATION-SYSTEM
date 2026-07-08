@@ -270,6 +270,7 @@ const ADMIN_NAV: NavItem[] = [
  * Danışman + Ar-Ge'nin read-only görüntüleyebildiği admin panel sayfaları.
  * Governance dashboard'ları kendi NAV_ITEMS'ına bu listeyi ekler.
  */
+// eslint-disable-next-line react-refresh/only-export-components -- sabit nav dizisi; HMR icin sorun degil
 export const STAFF_VIEW_NAV: NavItem[] = [
   {
     to: '/admin/rooms',
@@ -337,6 +338,7 @@ export const STAFF_VIEW_NAV: NavItem[] = [
 ];
 
 /** Analitik Danışman nav — kendi inbox'ı + read-only admin görünümleri. */
+// eslint-disable-next-line react-refresh/only-export-components -- sabit nav dizisi; HMR icin sorun degil
 export const DANISMAN_NAV: NavItem[] = [
   {
     to: '/danisman',
@@ -351,6 +353,7 @@ export const DANISMAN_NAV: NavItem[] = [
 ];
 
 /** YZ / Ar-Ge nav — proje yaşam döngüsü + read-only admin görünümleri. */
+// eslint-disable-next-line react-refresh/only-export-components -- sabit nav dizisi; HMR icin sorun degil
 export const ARGE_NAV: NavItem[] = [
   {
     to: '/arge',
@@ -365,6 +368,7 @@ export const ARGE_NAV: NavItem[] = [
 ];
 
 /** İzleyici nav — genel bakış + read-only admin görünümleri. */
+// eslint-disable-next-line react-refresh/only-export-components -- sabit nav dizisi; HMR icin sorun degil
 export const IZLEYICI_NAV: NavItem[] = [
   {
     to: '/izleyici',

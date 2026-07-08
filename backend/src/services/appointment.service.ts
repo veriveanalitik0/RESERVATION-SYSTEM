@@ -556,11 +556,15 @@ export async function getRoomAppointmentHeatmap(opts: { from?: string; to?: stri
  * Güncellenen satır sayısını döner.
  */
 export async function markPastAppointmentsCompleted(): Promise<number> {
-  const nowIso = new Date().toISOString();
+  // DİKKAT: end_at DB'de 'YYYY-MM-DD HH:MM:SS' YEREL metindir (ISO değil).
+  // Eski kod new Date().toISOString() ('T'/'Z'li UTC) ile leksik kıyaslıyordu;
+  // 10. karakterde boşluk < 'T' olduğundan BUGÜNÜN gelecekteki randevuları bile
+  // "geçmiş" sayılıp tamamlanıyordu. Kıyas artık DB'nin kendi yerel saatiyle
+  // ve aynı formatta yapılıyor (container TZ=Europe/Istanbul).
   const res = await dbRun(
     `UPDATE appointments SET status = 'completed', updated_at = CURRENT_TIMESTAMP
-       WHERE status = 'scheduled' AND end_at < ?`,
-    [nowIso]
+       WHERE status = 'scheduled' AND end_at < to_char(now(), 'YYYY-MM-DD HH24:MI:SS')`,
+    []
   );
   return res.changes;
 }
