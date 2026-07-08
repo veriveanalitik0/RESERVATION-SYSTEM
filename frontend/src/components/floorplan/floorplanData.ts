@@ -2,10 +2,11 @@
  * AI Lab kat planı (kroki) veri katmanı.
  *
  * Geometri kaynak-of-truth: Kroki projesi (main.html) — 2378×1642 plan pikseli.
- * Oda kimlikleri kroki kodlarıdır (CA-01..CA-19, TP-*, SS-*, OT-*, DN/ET/BH/MT/SL).
+ * Oda kimlikleri kroki kodlarıdır (CA-01..CA-18, TP-*, SS-*, OT-*, DN/ET/BH/MT/SL).
  *
- * klab eşlemesi SAYI kuralıyla yapılır: "AILAB -1D 4-2xNVD" → 4 → CA-04.
- * (Ad bazlı eşleme güvensiz: 12/16/17/18 no'lu odaların kroki adları eski.)
+ * klab eşlemesi, pod kodundaki SAYI + POD_TO_KROKI tablosuyla yapılır
+ * ("AILAB -1D 4-2xNVD" → 4 → CA-04; ama örn. 18 → CA-06 — güncel krokide
+ * çizim kimlikleri pod numaralarıyla birebir değil).
  * Görünen ad/cihaz/kapasite DAİMA klab DB'den gelir; krokideki CALISMA_INFO
  * yer tutucuları kullanılmaz.
  */
@@ -67,21 +68,20 @@ export const KROKI_ROOMS: KrokiRoomDef[] = [
   { id: 'CA-03', cat: 'calisma', s: R(738, 40, 87, 154) },
   { id: 'CA-04', cat: 'calisma', s: R(494, 487, 187, 106) },
   { id: 'CA-05', cat: 'calisma', s: R(500, 1132, 185, 149) },
-  { id: 'CA-06', cat: 'calisma', s: R(2181, 889, 133, 76) },
-  { id: 'CA-07', cat: 'calisma', s: R(2181, 974, 133, 73) },
-  { id: 'CA-08', cat: 'calisma', s: R(2181, 1056, 133, 79) },
-  { id: 'CA-09', cat: 'calisma', s: R(2181, 1144, 133, 87) },
+  { id: 'CA-06', cat: 'calisma', s: R(2181, 889, 133, 108) },
+  { id: 'CA-07', cat: 'calisma', s: R(2181, 1006, 133, 108) },
+  { id: 'CA-08', cat: 'calisma', s: R(2181, 1123, 133, 108) },
   // alt-orta açılı/oval kenarlı odalar — kesin kontur
-  { id: 'CA-10', cat: 'calisma', s: P(870, 1340, 865, 1354, 865, 1364, 873, 1379, 1003, 1449, 1003, 1333, 881, 1333), lx: 938, ly: 1372 },
-  { id: 'CA-11', cat: 'calisma', s: P(1012, 1333, 1200, 1333, 1205, 1339, 1205, 1445, 1192, 1458, 1023, 1457, 1013, 1454), lx: 1108, ly: 1396 },
-  { id: 'CA-12', cat: 'calisma', s: P(1304, 1332, 1375, 1334, 1531, 1426, 1537, 1448, 1525, 1460, 1307, 1459, 1289, 1445, 1290, 1341), lx: 1408, ly: 1406 },
-  { id: 'CA-13', cat: 'calisma', s: P(1784, 1334, 1850, 1333, 1865, 1343, 1865, 1445, 1849, 1460, 1628, 1461, 1619, 1453, 1618, 1433, 1624, 1425), lx: 1748, ly: 1406 },
-  { id: 'CA-14', cat: 'calisma', s: R(1048, 1514, 143, 86) },
-  { id: 'CA-15', cat: 'calisma', s: R(1200, 1514, 124, 86) },
-  { id: 'CA-16', cat: 'calisma', s: R(1333, 1514, 135, 86) },
-  { id: 'CA-17', cat: 'calisma', s: R(1545, 1514, 133, 86) },
-  { id: 'CA-18', cat: 'calisma', s: R(1687, 1514, 124, 86) },
-  { id: 'CA-19', cat: 'calisma', s: R(1820, 1514, 125, 86) },
+  { id: 'CA-09', cat: 'calisma', s: P(870, 1340, 865, 1354, 865, 1364, 873, 1379, 1003, 1449, 1003, 1333, 881, 1333), lx: 938, ly: 1372 },
+  { id: 'CA-10', cat: 'calisma', s: P(1012, 1333, 1200, 1333, 1205, 1339, 1205, 1445, 1192, 1458, 1023, 1457, 1013, 1454), lx: 1108, ly: 1396 },
+  { id: 'CA-11', cat: 'calisma', s: P(1304, 1332, 1375, 1334, 1531, 1426, 1537, 1448, 1525, 1460, 1307, 1459, 1289, 1445, 1290, 1341), lx: 1408, ly: 1406 },
+  { id: 'CA-12', cat: 'calisma', s: P(1784, 1334, 1850, 1333, 1865, 1343, 1865, 1445, 1849, 1460, 1628, 1461, 1619, 1453, 1618, 1433, 1624, 1425), lx: 1748, ly: 1406 },
+  { id: 'CA-13', cat: 'calisma', s: R(1048, 1514, 130, 86) },
+  { id: 'CA-14', cat: 'calisma', s: R(1187, 1514, 130, 86) },
+  { id: 'CA-15', cat: 'calisma', s: R(1394, 1514, 130, 86) },
+  { id: 'CA-16', cat: 'calisma', s: R(1533, 1514, 130, 86) },
+  { id: 'CA-17', cat: 'calisma', s: R(1672, 1514, 130, 86) },
+  { id: 'CA-18', cat: 'calisma', s: R(1811, 1514, 130, 86) },
 
   { id: 'TP-01', cat: 'toplanti', s: R(68, 486, 202, 233), lab: 'T' },
   { id: 'TP-02', cat: 'toplanti', s: R(279, 486, 205, 233), lab: 'T' },
@@ -94,7 +94,7 @@ export const KROKI_ROOMS: KrokiRoomDef[] = [
   { id: 'SS-02', cat: 'sistem', s: R(2182, 1240, 131, 117), lab: 'S' },
 
   { id: 'OT-01', cat: 'oturma', s: R(868, 421, 699, 53), lab: '', sw: 5 },
-  { id: 'OT-02', cat: 'oturma', s: R(1477, 1514, 59, 86), lab: '', sw: 5 },
+  { id: 'OT-02', cat: 'oturma', s: R(1326, 1514, 59, 86), lab: '', sw: 5 },
 
   { id: 'DN-01', cat: 'deneyim', s: R(1935, 40, 380, 839), lab: 'DENEYİM\nALANI', ls: 54, lc: '#1F2530', lx: 2125, ly: 400 },
 
@@ -106,10 +106,10 @@ export const KROKI_ROOMS: KrokiRoomDef[] = [
 
 /** Kroki'deki durum noktalarının özel konumları (açılı odalar). */
 export const KROKI_DOTPOS: Record<string, [number, number]> = {
-  'CA-10': [988, 1350],
-  'CA-11': [1190, 1349],
-  'CA-12': [1322, 1352],
-  'CA-13': [1842, 1352],
+  'CA-09': [988, 1350],
+  'CA-10': [1190, 1349],
+  'CA-11': [1322, 1352],
+  'CA-12': [1842, 1352],
 };
 
 export function shapeCenter(s: KrokiShape): [number, number] {
@@ -136,10 +136,22 @@ export function shapeBBox(s: KrokiShape): [number, number, number, number] {
 }
 
 /**
+ * Pod numarası → kroki oda kimliği (kaynak: Kroki main.html CALISMA_INFO).
+ * Güncel krokide çizim kimlikleri pod numaralarıyla birebir DEĞİL: pod 1
+ * (CUDA) CA-03'te, pod 18 (Polars) sağ kolonda CA-06'da vb.
+ */
+const POD_TO_KROKI: Record<number, string> = {
+  1: 'CA-03', 2: 'CA-02', 3: 'CA-01', 4: 'CA-04', 5: 'CA-05',
+  6: 'CA-09', 7: 'CA-10', 8: 'CA-11', 9: 'CA-12', 10: 'CA-13',
+  11: 'CA-14', 12: 'CA-15', 13: 'CA-16', 14: 'CA-17', 15: 'CA-18',
+  16: 'CA-08', 17: 'CA-07', 18: 'CA-06',
+};
+
+/**
  * klab odası → kroki kimliği.
- * Pod kodu "AILAB -1D N-…" içindeki N sayısıyla CA-N'e bağlanır ("-1D" kat
- * belirteci ve "2xNVD" çarpanı yanlış yakalanmasın diye desen sabitlenmiştir).
- * Pod dışı türler tip üzerinden eşlenir (ada güvenmek kırılgan).
+ * Pod kodu "AILAB -1D N-…" içindeki N sayısı eşleme tablosuyla kroki odasına
+ * bağlanır ("-1D" kat belirteci ve "2xNVD" çarpanı yanlış yakalanmasın diye
+ * desen sabitlenmiştir). Pod dışı türler tip üzerinden eşlenir.
  */
 export function krokiIdForRoom(room: Pick<Room, 'code' | 'roomType'>): string | null {
   if (room.roomType === 'experience') return 'DN-01';
@@ -147,8 +159,7 @@ export function krokiIdForRoom(room: Pick<Room, 'code' | 'roomType'>): string | 
   const m = room.code.match(/-1D\s+(\d+)-/);
   if (!m) return null;
   const n = parseInt(m[1], 10);
-  if (n < 1 || n > 19) return null;
-  return `CA-${String(n).padStart(2, '0')}`;
+  return POD_TO_KROKI[n] ?? null;
 }
 
 /** rooms listesinden krokiId → Room haritası üretir. */
@@ -216,12 +227,6 @@ export const KROKI_INFO: Record<string, KrokiInfoMeta> = {
     title: 'Bahçe',
     desc: 'Laboratuvarın merkezindeki açık bahçe; hava almak ve dinlenmek için.',
     rows: [['Tür', 'Bahçe'], ['Konum', 'Açık hava']],
-  },
-  'CA-19': {
-    title: 'Oda 19',
-    desc: 'Bu çalışma odası henüz randevu sistemine tanımlı değil.',
-    rows: [['Tür', 'Çalışma Odası'], ['Durum', 'Sistem dışı']],
-    img: '/kroki/CA-19.jpg',
   },
 };
 

@@ -147,7 +147,6 @@ export default function RoomFloorPlan({ rooms, onRoomSelect, rangeLabel }: Props
           'TP-04': 'Toplantı', 'TP-05': 'Toplantı', 'TP-06': 'Toplantı',
           'SS-01': 'Sistem', 'SS-02': 'Sistem',
           'MT-01': 'Mutfak', 'SL-01': 'Salon', 'BH-01': 'Bahçe',
-          'CA-19': 'Oda 19',
         };
         for (const [kid, room] of roomIndexRef.current) labels[kid] = room.name;
         handleRef.current = buildFloor3D(el, {
@@ -463,12 +462,6 @@ function FloorRoom({ def, room, on, selected, onActivate, onHover, onLeave }: Fl
     } else if (def.lab) {
       label = <MultilineLabel def={def} lx={lx} ly={ly} />;
     }
-  } else if (def.id === 'CA-19') {
-    label = (
-      <text x={lx} y={ly} textAnchor="middle" dominantBaseline="central" fontSize={16} fill="#0E2117" opacity={0.7}>
-        Oda 19
-      </text>
-    );
   } else if (def.lab) {
     label = <MultilineLabel def={def} lx={lx} ly={ly} />;
   }
