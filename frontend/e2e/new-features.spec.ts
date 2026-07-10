@@ -8,6 +8,7 @@
  *  7. Görsel Üret → Profil sekmesi (/gorsel yönlendirmesi dahil)
  */
 import { test, expect, type Page } from '@playwright/test';
+import { acceptConsentIfShown } from './helpers';
 
 async function loginUser(page: Page): Promise<void> {
   await page.goto('/login');
@@ -20,6 +21,8 @@ async function loginUser(page: Page): Promise<void> {
     }),
     page.locator('button[type="submit"]').click(),
   ]);
+  // İlk girişte EK-1 beyan kartı çıkabilir (bir kereye mahsus) — onayla.
+  await acceptConsentIfShown(page);
   await page.waitForURL(/\/(rooms|dashboard)/, { timeout: 15_000 });
 }
 

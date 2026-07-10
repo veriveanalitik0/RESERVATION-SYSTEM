@@ -8,6 +8,7 @@
  * Ön koşul: backend (:4000) + frontend (:5173) ayakta (bkz. playwright.config.ts).
  */
 import { test, expect } from '@playwright/test';
+import { acceptConsentIfShown } from './helpers';
 
 async function loginAsUser(page: import('@playwright/test').Page) {
   await page.goto('/login');
@@ -21,6 +22,8 @@ async function loginAsUser(page: import('@playwright/test').Page) {
     ),
     page.locator('button[type="submit"]').click(),
   ]);
+  // İlk girişte EK-1 beyan kartı çıkabilir (bir kereye mahsus) — onayla.
+  await acceptConsentIfShown(page);
   // Aktif booking'i olan kullanıcı /dashboard'a, yoksa /rooms'a yönlenir.
   await page.waitForURL(/\/(rooms|dashboard)/, { timeout: 15_000 });
 }

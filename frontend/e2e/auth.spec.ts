@@ -2,6 +2,7 @@
  * E2E: auth + landing + login + register
  */
 import { test, expect } from '@playwright/test';
+import { acceptConsentIfShown } from './helpers';
 
 test.describe('Landing & Auth', () => {
   test('landing açılır ve giriş kartı görünür', async ({ page }) => {
@@ -23,6 +24,8 @@ test.describe('Landing & Auth', () => {
       page.locator('button[type="submit"]').click(),
     ]);
     expect(resp.status()).toBe(200);
+    // İlk girişte EK-1 beyan kartı çıkabilir (bir kereye mahsus) — onayla.
+    await acceptConsentIfShown(page);
     // Login sonrası: aktif booking'i olan kullanıcı /dashboard'a, yoksa /rooms'a
     // yönlenir (Login.tsx redirectAfterLogin). İkisi de geçerli kimlikli giriştir.
     await page.waitForURL(/\/(rooms|dashboard)/, { timeout: 15_000 });

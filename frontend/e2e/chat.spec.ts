@@ -2,6 +2,7 @@
  * E2E: genel sohbet (rol-bağımsız chat) — `/sohbet`
  */
 import { test, expect, Page } from '@playwright/test';
+import { acceptConsentIfShown } from './helpers';
 
 async function userLogin(page: Page): Promise<void> {
   await page.goto('/login');
@@ -15,6 +16,8 @@ async function userLogin(page: Page): Promise<void> {
     ),
     page.locator('button[type="submit"]').click(),
   ]);
+  // İlk girişte EK-1 beyan kartı çıkabilir (bir kereye mahsus) — onayla.
+  await acceptConsentIfShown(page);
   // Aktif booking'i olan kullanıcı /dashboard'a, yoksa /rooms'a yönlenir.
   await page.waitForURL(/\/(rooms|dashboard)/, { timeout: 15_000 });
 }
