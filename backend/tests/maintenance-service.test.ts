@@ -16,6 +16,7 @@ import { nanoid } from 'nanoid';
 import { initSchema, closeDb, dbRun, dbOne } from '../src/db/schema';
 import { runMaintenanceOnce } from '../src/services/maintenance.service';
 import { markPastAppointmentsCompleted } from '../src/services/appointment.service';
+import { sqlDateTimeLocal } from '../src/utils/dates';
 
 const USER = nanoid();
 const ROOM = nanoid();
@@ -93,6 +94,63 @@ describe('runMaintenanceOnce', () => {
     expect(result).toHaveProperty('refreshTokensDeleted');
     expect(result).toHaveProperty('auditLogsDeleted');
     expect(result).toHaveProperty('vacuumed');
+  });
+
+  /**
+   * REGRESYON — format uyumu (boşluk-format created_at vs cutoff).
+   * Eski kod cutoff'u ISO (toISOString, 'T' ayraçlı) üretirken kolonlar şema
+   * default'uyla 'YYYY-MM-DD HH:MM:SS' (boşluk) formatındaydı; leksik kıyasta
+   * ' ' < 'T' olduğundan cutoff GÜNÜNDEKİ ama cutoff'tan YENİ kayıtlar da
+   * siliniyordu. Cutoff artık kolon formatıyla üretiliyor — yeni kayıt yaşamalı.
+   */
+  it('audit retention: cutoff formatı kolonla uyumlu — cutoff\'tan yeni kayıt SİLİNMEZ, eski silinir', async () => {
+    const retentionDays = 30;
+    const cutoffMs = Date.now() - retentionDays * DAY_MS;
+
+    const survivorId = nanoid();
+    const goneId = nanoid();
+    // Cutoff'tan 1 dk YENİ (eski ISO-cutoff kodunda aynı gün içinde yanlışlıkla silinirdi)
+    await dbRun(
+      `INSERT INTO audit_logs (id, event_type, success, created_at) VALUES (?, 'test.retention', 1, ?)`,
+      [survivorId, sqlDateTimeLocal(new Date(cutoffMs + 60_000))]
+    );
+    // Cutoff'tan 1 gün ESKİ → silinmeli
+    await dbRun(
+      `INSERT INTO audit_logs (id, event_type, success, created_at) VALUES (?, 'test.retention', 1, ?)`,
+      [goneId, sqlDateTimeLocal(new Date(cutoffMs - DAY_MS))]
+    );
+
+    await runMaintenanceOnce({ vacuumOnPrune: false, auditRetentionDays: retentionDays, auditMaxRows: 0 });
+
+    expect(await dbOne('SELECT id FROM audit_logs WHERE id = ?', [survivorId])).toBeDefined();
+    expect(await dbOne('SELECT id FROM audit_logs WHERE id = ?', [goneId])).toBeUndefined();
+
+    await dbRun(`DELETE FROM audit_logs WHERE id = ?`, [survivorId]);
+  });
+
+  it('refresh token: boşluk-formatlı created_at cutoff gününde yeni ise revoked olsa da korunur', async () => {
+    const graceDays = 30;
+    const cutoffMs = Date.now() - graceDays * DAY_MS;
+
+    // Revoked ama cutoff'tan 1 dk yeni (grace penceresi içinde) → KORUNMALI.
+    // Gerçek yazıcı (token.service) created_at'i şema default'una bırakır → boşluk formatı.
+    const recentRevoked = nanoid();
+    await dbRun(
+      `INSERT INTO refresh_tokens (id, token_hash, subject_id, subject_type, expires_at, revoked, created_at)
+       VALUES (?, ?, ?, 'user', ?, 1, ?)`,
+      [recentRevoked, nanoid(), USER, iso(Date.now() + 30 * DAY_MS), sqlDateTimeLocal(new Date(cutoffMs + 60_000))]
+    );
+
+    const result = await runMaintenanceOnce({
+      vacuumOnPrune: false,
+      refreshTokenGraceDays: graceDays,
+      auditRetentionDays: 0,
+      auditMaxRows: 0,
+    });
+    expect(typeof result.refreshTokensDeleted).toBe('number');
+
+    expect(await dbOne('SELECT id FROM refresh_tokens WHERE id = ?', [recentRevoked])).toBeDefined();
+    await dbRun(`DELETE FROM refresh_tokens WHERE id = ?`, [recentRevoked]);
   });
 });
 

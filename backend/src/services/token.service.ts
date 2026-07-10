@@ -16,6 +16,7 @@ import { config } from '../config/env';
 import { dbOne, dbRun, dbTx } from '../db/schema';
 import type { JwtPayload, SubjectKind } from '../types/auth.types';
 import { logger } from '../utils/logger';
+import { sqlDateTimeLocal } from '../utils/dates';
 
 interface KeyBundle {
   privateKey: string;
@@ -91,8 +92,10 @@ export async function issueRefreshToken(
   const id = nanoid();
   const expiresAt = new Date(Date.now() + bundle.refreshTtl * 1000);
 
+  // Kanonik format (ADR-001): TEXT timestamp kolonlarına ISO değil
+  // 'YYYY-MM-DD HH:MM:SS' (yerel) yazılır — leksik karşılaştırma tutarlılığı.
   await dbRun(`INSERT INTO refresh_tokens (id, token_hash, subject_id, subject_type, expires_at, parent_id)
-       VALUES (?, ?, ?, ?, ?, ?)`, [id, tokenHash, subjectId, kind, expiresAt.toISOString(), parentId]);
+       VALUES (?, ?, ?, ?, ?, ?)`, [id, tokenHash, subjectId, kind, sqlDateTimeLocal(expiresAt), parentId]);
 
   return { token: raw, id, expiresAt };
 }

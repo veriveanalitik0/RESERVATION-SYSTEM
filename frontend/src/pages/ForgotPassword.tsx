@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { clearCsrfCache } from '../services/api';
+import { AuthBackground } from '../components/AuthBackground';
+import { AuthHeader } from '../components/AuthHeader';
 
 /**
  * Parola sıfırlama talep sayfası.
@@ -35,43 +37,9 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-kt-green-950">
-      {/* ========== ARKAPLAN — Giriş ekranı ile aynı ========== */}
-      <div className="absolute inset-0">
-        <img
-          src="/ai-lab-bg.jpg"
-          alt=""
-          aria-hidden="true"
-          className="w-full h-full object-cover animate-ken-burns"
-          loading="eager"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-kt-green-950/65 via-kt-green-900/55 to-kt-green-950/80" />
-      </div>
-      <div className="absolute inset-0 bg-neural-grid-dark opacity-25 pointer-events-none" />
-      <div className="absolute inset-0 bg-ai-mesh animate-mesh-shift pointer-events-none" />
-      <div className="absolute top-1/4 left-10 w-96 h-96 bg-kt-gold-400/25 rounded-full blur-[120px] animate-float-slow pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-kt-violet-500/20 rounded-full blur-[140px] animate-float-medium pointer-events-none" />
-
-      <header className="relative z-10 px-6 md:px-10 py-6 flex items-center justify-between">
-        <Link to="/" aria-label="Ana sayfa" className="relative inline-block group">
-          <div className="absolute inset-0 -m-8 bg-kt-gold-400/25 rounded-full blur-[60px] animate-glow-pulse pointer-events-none" />
-          <div className="absolute inset-0 -m-4 bg-kt-green-600/30 rounded-full blur-[36px] pointer-events-none" />
-          <div className="relative aspect-[4/3] h-16 md:h-32">
-            <img
-              src="/ai-lab-logo-hero.png"
-              alt="Kuveyt Türk Yapay Zeka Laboratuvarı"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[60.9%] h-[215%] max-w-none w-auto object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.02]"
-              loading="eager"
-              decoding="async"
-            />
-          </div>
-        </Link>
-        <Link
-          to="/login"
-          className="text-sm font-semibold text-white/80 hover:text-kt-gold-300 transition-colors backdrop-blur-sm bg-black/20 px-3 py-1.5 rounded-lg border border-white/10"
-        >
-          ← Girişe dön
-        </Link>
-      </header>
+      {/* Arkaplan (Giriş ekranı ile aynı) + üst header — ortak auth bileşenleri */}
+      <AuthBackground />
+      <AuthHeader backTo="/login" backLabel="← Girişe dön" variant="inline" />
 
       <main className="relative z-10 flex-1 flex items-center justify-center px-6 py-8">
         <div className="w-full max-w-md animate-slide-up">

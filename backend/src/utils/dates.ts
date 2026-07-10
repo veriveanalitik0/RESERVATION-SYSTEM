@@ -13,6 +13,23 @@ export function ymdLocal(d: Date = new Date()): string {
 }
 
 /**
+ * KANONİK SQL zaman damgası formatı — 'YYYY-MM-DD HH:MM:SS' (yerel saat,
+ * TZ=Europe/Istanbul). Şema DEFAULT'ları (`to_char(now(),'YYYY-MM-DD HH24:MI:SS')`)
+ * ve async-db'nin CURRENT_TIMESTAMP çevirisi ile AYNI formattır; TEXT kolonlarda
+ * leksikografik karşılaştırma ancak bu formatla doğru çalışır.
+ *
+ * KURAL: TEXT timestamp kolonuna JS'ten değer yazarken/karşılaştırırken
+ * `toISOString()` DEĞİL bu fonksiyon kullanılmalı ('T' ayracı + UTC kayması
+ * sıralamayı bozar — bkz. maintenance.service cutoff düzeltmesi).
+ */
+export function sqlDateTimeLocal(d: Date = new Date()): string {
+  return (
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ` +
+    `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
+  );
+}
+
+/**
  * Rezervasyon bitiş tarihi: başlangıç + N ay - 1 gün.
  * Ay taşmasında hedef ayın son gününe kıskaçlanır (31 Oca + 1 ay = 27 Şub;
  * JS'in taşma davranışıyla Mart'a kaymaz). Saf tarih aritmetiği — UTC çıpalı

@@ -19,7 +19,14 @@ import {
   registerSchema,
   resetPasswordSchema,
 } from '../validators/schemas';
-import { unifiedLogin, registerUser, findSubjectById } from '../services/auth.service';
+import {
+  unifiedLogin,
+  registerUser,
+  findSubjectById,
+  acceptUserConsent,
+  CONSENT_VERSION,
+} from '../services/auth.service';
+import { requireAnySubject } from '../middleware/auth.middleware';
 import {
   issueRefreshToken,
   revokeRefreshToken,
@@ -264,6 +271,52 @@ router.post(
           role: admin.role,
         },
         usedBackupCode: verify.usedBackupCode,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
+ * EK-1 "Okudum, Kabul Ettim" beyanı onayı — bir kereye mahsus, login/register
+ * akışındaki onay kartından çağrılır. Tüm user-tabanlı kind'lar (user/danisman/
+ * arge/izleyici) kabul edilir; admin hesapları beyan kapsamı dışındadır.
+ * İdempotent: tekrar çağrı mevcut onay zamanını döner.
+ */
+router.post(
+  '/consent',
+  csrfProtection,
+  requireAnySubject,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const auth = req.auth!;
+      if (auth.subjectType === 'admin') {
+        throw new HttpError(
+          400,
+          'Beyan onayı yalnız kullanıcı hesapları için geçerlidir.',
+          'CONSENT_NOT_APPLICABLE'
+        );
+      }
+
+      const result = await acceptUserConsent(auth.subjectId);
+
+      if (!result.alreadyAccepted) {
+        recordAudit({
+          eventType: 'user.consent.accepted',
+          subjectId: auth.subjectId,
+          subjectType: auth.subjectType,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent') ?? null,
+          success: true,
+          details: { version: CONSENT_VERSION },
+        });
+      }
+
+      res.json({
+        ok: true,
+        consentAcceptedAt: result.consentAcceptedAt,
+        version: CONSENT_VERSION,
       });
     } catch (err) {
       next(err);

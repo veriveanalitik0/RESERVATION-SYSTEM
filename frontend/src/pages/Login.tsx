@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
 import { api, clearCsrfCache } from '../services/api';
 import { ymdLocal } from '../lib/utils';
 import LoginPage from '@/components/ui/gaming-login';
+import { ConsentCard } from '../components/ConsentCard';
+import { AuthBackground } from '../components/AuthBackground';
+import { AuthHeader } from '../components/AuthHeader';
+import type { AuthUser, SubjectKind } from '../types';
 
 /**
  * Tek giriş ekranı. Backend hem admins hem users tablosunu kontrol eder.
@@ -14,7 +18,7 @@ import LoginPage from '@/components/ui/gaming-login';
  * orb'ları) + gaming-login style glass dark form card.
  */
 export default function Login() {
-  const { login, completeMfaLogin } = useAuth();
+  const { login, completeMfaLogin, logout, markConsentAccepted } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -24,6 +28,12 @@ export default function Login() {
   // MFA ikinci adımı: backend pending token döndüyse TOTP kodu istenir.
   const [mfaPendingToken, setMfaPendingToken] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState('');
+  // EK-1 beyanı adımı: user-tabanlı hesap henüz onaylamadıysa (bir kereye mahsus)
+  // form yerine onay kartı gösterilir; onaylanmadan yönlendirme yapılmaz.
+  const [consentPending, setConsentPending] = useState<{
+    kind: SubjectKind;
+    subject: AuthUser;
+  } | null>(null);
 
   // Sayfa açıldığında cache'lenmiş CSRF token'ı temizle. Backend restart
   // veya session geçişi sonrası bayat token kullanmamak için (bir sonraki
@@ -78,6 +88,12 @@ export default function Login() {
         toast.push('info', 'Güvenlik doğrulaması: authenticator kodunuzu girin.');
         return;
       }
+      // EK-1 beyanı henüz onaylanmamış user-tabanlı hesap: yönlendirme yerine
+      // onay kartı adımı (admin'ler kapsam dışı — consentAcceptedAt undefined).
+      if (result.kind !== 'admin' && result.subject.consentAcceptedAt === null) {
+        setConsentPending({ kind: result.kind, subject: result.subject });
+        return;
+      }
       await redirectAfterLogin(result.kind, result.subject);
     } catch (err) {
       toast.push('error', (err as Error).message || 'Giriş başarısız.');
@@ -107,6 +123,38 @@ export default function Login() {
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleConsentAccept() {
+    if (loading || !consentPending) return;
+    setLoading(true);
+    try {
+      const res = await api.acceptConsent(consentPending.kind);
+      markConsentAccepted(consentPending.kind, res.consentAcceptedAt);
+      const { kind, subject } = consentPending;
+      setConsentPending(null);
+      await redirectAfterLogin(kind, subject);
+    } catch (err) {
+      toast.push('error', (err as Error).message || 'Beyan onayı kaydedilemedi.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleConsentDecline() {
+    if (loading || !consentPending) return;
+    setLoading(true);
+    try {
+      await logout(consentPending.kind);
+    } catch {
+      // Ağ/5xx durumunda logout isteği düşebilir — yerel oturum temizliği
+      // logout() içindeki finally'de zaten yapıldı; hata yutulur (aksi halde
+      // async onClick'ten unhandled rejection kaçar).
+    } finally {
+      setConsentPending(null);
+      setLoading(false);
+      toast.push('info', 'EK-1 beyanı onaylanmadan laboratuvar sistemine giriş yapılamaz.');
     }
   }
 
@@ -143,68 +191,24 @@ export default function Login() {
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center px-4 py-12 overflow-hidden bg-kt-green-950">
-      {/* ========== ARKAPLAN — Landing hero ile aynı ========== */}
-      {/* 1. Ana görsel + ken-burns */}
-      <div className="absolute inset-0">
-        <img
-          src="/ai-lab-bg.jpg"
-          alt=""
-          aria-hidden="true"
-          className="w-full h-full object-cover animate-ken-burns"
-          loading="eager"
-        />
-        {/* 2. Koyu navy gradient overlay — okunabilirlik için */}
-        <div className="absolute inset-0 bg-gradient-to-br from-kt-green-950/65 via-kt-green-900/55 to-kt-green-950/80" />
-      </div>
+      {/* Arkaplan (Landing hero ile aynı) + üst header — ortak auth bileşenleri */}
+      <AuthBackground greenOrb />
+      <AuthHeader backTo="/" backLabel="← Ana sayfa" variant="overlay" />
 
-      {/* 3. Neural grid */}
-      <div className="absolute inset-0 bg-neural-grid-dark opacity-25 pointer-events-none" />
-      {/* 4. AI mesh */}
-      <div className="absolute inset-0 bg-ai-mesh animate-mesh-shift pointer-events-none" />
-      {/* 5. Glow orbs */}
-      <div className="absolute top-1/4 left-10 w-96 h-96 bg-kt-gold-400/25 rounded-full blur-[120px] animate-float-slow pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-kt-violet-500/20 rounded-full blur-[140px] animate-float-medium pointer-events-none" />
-      <div className="absolute top-10 right-1/3 w-72 h-72 bg-kt-green-600/30 rounded-full blur-[100px] pointer-events-none" />
-
-      {/* Üst-sol: Landing hero ile birebir aynı inline logo treatment
-          — 3 katmanlı blur halo (gold/violet/green) + yıldız parıltıları
-          + cyan drop-shadow + duration-700 group-hover:scale-[1.02] */}
-      <header className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-6 md:px-10 py-6">
-        <Link to="/" aria-label="Ana sayfa" className="relative inline-block group">
-          {/* Çoklu yumuşak ışık halkaları */}
-          <div className="absolute inset-0 -m-8 bg-kt-gold-400/25 rounded-full blur-[60px] animate-glow-pulse pointer-events-none" />
-          <div className="absolute inset-0 -m-6 bg-kt-violet-500/20 rounded-full blur-[48px] pointer-events-none" />
-          <div className="absolute inset-0 -m-4 bg-kt-green-600/30 rounded-full blur-[36px] pointer-events-none" />
-
-          {/* Yıldız parıltıları */}
-          <svg className="absolute -top-4 -right-5 w-7 h-7 text-kt-gold-300 opacity-70 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0 L13.5 8.5 L22 12 L13.5 15.5 L12 24 L10.5 15.5 L2 12 L10.5 8.5 Z" className="animate-pulse-gold" />
-          </svg>
-          <svg className="absolute -bottom-3 -left-4 w-5 h-5 text-kt-gold-300/60 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0 L13.5 8.5 L22 12 L13.5 15.5 L12 24 L10.5 15.5 L2 12 L10.5 8.5 Z" />
-          </svg>
-
-          <div className="relative aspect-[4/3] h-16 md:h-32">
-            <img
-              src="/ai-lab-logo-hero.png"
-              alt="Kuveyt Türk Yapay Zeka Laboratuvarı"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[60.9%] h-[215%] max-w-none w-auto object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.02]"
-              loading="eager"
-              decoding="async"
-            />
-          </div>
-        </Link>
-        <Link
-          to="/"
-          className="text-sm font-semibold text-white/80 hover:text-kt-gold-300 transition-colors backdrop-blur-sm bg-black/20 px-3 py-1.5 rounded-lg border border-white/10"
-        >
-          ← Ana sayfa
-        </Link>
-      </header>
-
-      {/* Merkez: glass form card (veya MFA doğrulama adımı) */}
-      <div className="relative z-20 w-full max-w-md animate-fade-in">
-        {mfaPendingToken ? (
+      {/* Merkez: glass form card (veya MFA doğrulama / EK-1 beyan adımı) */}
+      <div
+        className={`relative z-20 w-full animate-fade-in ${
+          consentPending ? 'max-w-2xl' : 'max-w-md'
+        }`}
+      >
+        {consentPending ? (
+          <ConsentCard
+            fullName={consentPending.subject.fullName}
+            loading={loading}
+            onAccept={handleConsentAccept}
+            onDecline={handleConsentDecline}
+          />
+        ) : mfaPendingToken ? (
           <form
             onSubmit={handleMfaSubmit}
             className="backdrop-blur-xl bg-black/40 border border-white/10 rounded-2xl p-8 shadow-2xl flex flex-col gap-5"

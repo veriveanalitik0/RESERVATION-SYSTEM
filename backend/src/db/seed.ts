@@ -12,6 +12,9 @@ import argon2 from 'argon2';
 import { nanoid } from 'nanoid';
 import { dbAll, dbOne, dbRun, dbTx } from './schema';
 import { SEED_BOOKS } from './seed-books';
+// Kanonik format (ADR-001): TEXT timestamp kolonlarına 'YYYY-MM-DD HH:MM:SS'
+// (yerel) yazılır — seed ISO yazarsa her taze kurulumda karışık format doğar.
+import { sqlDateTimeLocal } from '../utils/dates';
 import {
   GATE_DEFINITIONS,
   applicableGates,
@@ -591,7 +594,7 @@ export async function seedBookings(): Promise<void> {
     // Admin'in review yaptığı tarih = approve/reject ise start_date - 2 gün, feedback ise start_date - 1 gün
     const isReviewed = b.status !== 'pending';
     const reviewedAt = isReviewed
-      ? new Date(start.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      ? sqlDateTimeLocal(new Date(start.getTime() - 2 * 24 * 60 * 60 * 1000))
       : null;
 
     // Approve edilmiş booking'ler envanterde görünür
@@ -605,7 +608,7 @@ export async function seedBookings(): Promise<void> {
     if (b.status === 'approved') {
       lifecycleStage = b.lifecycleStage ?? APPROVED_STAGE_CYCLE[approvedIdx % APPROVED_STAGE_CYCLE.length];
       approvedIdx++;
-      stageEnteredAt = reviewedAt ?? new Date(start.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
+      stageEnteredAt = reviewedAt ?? sqlDateTimeLocal(new Date(start.getTime() - 2 * 24 * 60 * 60 * 1000));
     }
 
     await dbRun(INSERT_BOOKING, [
@@ -628,8 +631,8 @@ export async function seedBookings(): Promise<void> {
       lifecycleStage,
       stageEnteredAt,
       // created_at = start_date - 3 gün (talep oluşturulma zamanı)
-      new Date(start.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      reviewedAt ?? new Date(start.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      sqlDateTimeLocal(new Date(start.getTime() - 3 * 24 * 60 * 60 * 1000)),
+      reviewedAt ?? sqlDateTimeLocal(new Date(start.getTime() - 3 * 24 * 60 * 60 * 1000)),
     ]);
     inserted++;
   }
@@ -678,7 +681,7 @@ export async function seedShowcaseEngagement(): Promise<void> {
     for (const u of commentUsers) {
       const body = commentTemplates[Math.floor(Math.random() * commentTemplates.length)];
       const daysAgo = Math.floor(Math.random() * 14);
-      const createdAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+      const createdAt = sqlDateTimeLocal(new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000));
       await dbRun(INSERT_COMMENT, [nanoid(), booking.id, u.id, u.full_name, body, createdAt]);
       commentCount++;
     }
@@ -1006,7 +1009,7 @@ async function seedLifecycle(
   const nowMs = Date.now();
   const span = Math.max(nowMs - createdAtMs, 4 * 86400_000);
   const stepMs = span / (rank + 1);
-  const at = (i: number) => new Date(createdAtMs + stepMs * (i + 1)).toISOString();
+  const at = (i: number) => sqlDateTimeLocal(new Date(createdAtMs + stepMs * (i + 1)));
 
   const stages: Array<'application' | 'development' | 'stage' | 'production' | 'live'> = [
     'application',
@@ -1138,10 +1141,10 @@ export async function seedLicenseRequests(): Promise<void> {
 
       const daysAgo = r.daysAgoCreated ?? 7;
       const createdAtMs = Date.now() - daysAgo * 24 * 60 * 60 * 1000;
-      const createdAt = new Date(createdAtMs).toISOString();
+      const createdAt = sqlDateTimeLocal(new Date(createdAtMs));
       const isReviewed = r.status !== 'pending';
       const reviewedAt = isReviewed
-        ? new Date(Date.now() - Math.max(0, daysAgo - 2) * 24 * 60 * 60 * 1000).toISOString()
+        ? sqlDateTimeLocal(new Date(Date.now() - Math.max(0, daysAgo - 2) * 24 * 60 * 60 * 1000))
         : null;
 
       const level: GovernanceLevel =
@@ -1271,7 +1274,7 @@ export async function seedWaitlist(): Promise<void> {
       if (!userId || !roomId) continue;
       const pos = (positionByRoom.get(roomId) ?? 0) + 1;
       positionByRoom.set(roomId, pos);
-      const createdAt = new Date(Date.now() - w.daysAgoJoined * 86400000).toISOString();
+      const createdAt = sqlDateTimeLocal(new Date(Date.now() - w.daysAgoJoined * 86400000));
       const desiredStart = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
       await dbRun(INSERT_WAITLIST, [
         nanoid(),
@@ -1394,9 +1397,9 @@ export async function seedNotifications(): Promise<void> {
   for (const n of NOTIFICATIONS) {
     const recipientId = idByEmail.get(n.recipientEmail);
     if (!recipientId) continue;
-    const createdAt = new Date(
+    const createdAt = sqlDateTimeLocal(new Date(
       Date.now() - (n.hoursAgo ?? 1) * 60 * 60 * 1000
-    ).toISOString();
+    ));
     await dbRun(INSERT_NOTIFICATION, [
       nanoid(),
       recipientId,

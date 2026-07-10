@@ -17,6 +17,7 @@ import { runIfCronLeader } from '../db/cron-lock';
 import { markPastAppointmentsCompleted } from './appointment.service';
 import { markOverdueLoans } from './book.service';
 import { recoverStuckVisuals } from './visual.service';
+import { sqlDateTimeLocal } from '../utils/dates';
 import { logger } from '../utils/logger';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -60,18 +61,23 @@ let timer: NodeJS.Timeout | null = null;
 async function pruneOnce(
   cfg: MaintenanceConfig
 ): Promise<{ refreshTokensDeleted: number; auditLogsDeleted: number }> {
-  // 1) Refresh token cleanup
-  const tokenCutoff = new Date(Date.now() - cfg.refreshTokenGraceDays * ONE_DAY_MS).toISOString();
+  // 1) Refresh token cleanup.
+  // FORMAT UYUMU (ADR-001): TEXT kolonlarda karşılaştırma leksikografiktir;
+  // cutoff, kolon formatıyla AYNI olmalı. Tüm zaman kolonları artık kanonik
+  // 'YYYY-MM-DD HH:MM:SS' (yerel) formatındadır — yazarlar sqlDateTimeLocal
+  // kullanır, eski ISO kayıtlar 0009 migration'ı ile normalize edildi.
+  const cutoffDate = new Date(Date.now() - cfg.refreshTokenGraceDays * ONE_DAY_MS);
+  const tokenCutoff = sqlDateTimeLocal(cutoffDate);
   const tokenRes = await dbRun(`DELETE FROM refresh_tokens
        WHERE (expires_at < ? OR revoked = 1)
          AND created_at < ?`, [tokenCutoff, tokenCutoff]);
 
-  // 2) Audit log retention — yaş bazlı
+  // 2) Audit log retention — yaş bazlı (created_at boşluk-formatlı → aynı format)
   let auditDeleted = 0;
   if (cfg.auditRetentionDays > 0) {
-    const auditCutoff = new Date(
-      Date.now() - cfg.auditRetentionDays * ONE_DAY_MS
-    ).toISOString();
+    const auditCutoff = sqlDateTimeLocal(
+      new Date(Date.now() - cfg.auditRetentionDays * ONE_DAY_MS)
+    );
     auditDeleted += (await dbRun(`DELETE FROM audit_logs WHERE created_at < ?`, [auditCutoff])).changes;
   }
 

@@ -18,9 +18,12 @@ src/db/migrations/
 - Migration'lar **transaction-güvenli** olmalı: `CREATE INDEX CONCURRENTLY`, `VACUUM`
   gibi tx-dışı komutlar KULLANILAMAZ (gerekiyorsa ayrı/manuel uygulanmalı).
 - Bir kez uygulanan dosya DEĞİŞTİRİLMEZ — düzeltme gerekiyorsa yeni dosya ekleyin.
-- `schema.pg.sql` BASELINE'dır: yeni kurulumda tabloları oluşturur ve her boot'ta
-  idempotent çalışır. Geçmişte oraya eklenen `ALTER ... IF NOT EXISTS` blokları
-  geriye uyum için kalır; YENİ değişiklikler buraya (migrations/) yazılmalı.
+- `schema.pg.sql` BASELINE'dır: yalnız yeni kurulumda tabloları oluşturur (her
+  boot'ta idempotent koşar ama mevcut tabloya kolon eklemez). Eski retro-ALTER
+  bloğu `0000-baseline-retro-patches.sql`'e taşındı — baseline'a retro-ALTER
+  EKLENMEZ. Yeni kolon: (1) migration yaz, (2) baseline CREATE'i de güncelle.
+- Zaman damgası kolonlarına yazarken `utils/dates.ts → sqlDateTimeLocal()`
+  kullanın; `toISOString()` DB'ye yazılamaz (bkz. docs/adr/ADR-001).
 - Migration'lar boot sırasında `initSchema()` içinde otomatik koşar; ayrıca
   `npm run db:init` de uygular.
 

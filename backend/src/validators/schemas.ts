@@ -124,7 +124,7 @@ export const registerSchema = z.object({
   // SECURITY (C2): governanceRole REGISTER üzerinden ATANAMAZ. Aksi halde
   // herhangi biri kendisini Ar-Ge mühendisi olarak kaydedip /governance/arge
   // endpoint'lerine erişebilir (privilege escalation). Atama yalnız admin
-  // tarafından PATCH /admin/users/:id/governance-role ile yapılır.
+  // tarafından PUT /admin/users/:id/governance-role ile yapılır.
   // Zod .strict() kullanmadığımız için extra field'lar otomatik ignore edilir
   // — bu schema'da yer almaması zaten yeterli savunma.
 }).refine((d) => d.password === d.passwordConfirm, {
@@ -172,12 +172,29 @@ export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
  */
 export const adminUserUpdateSchema = profileUpdateSchema.extend({
   status: z.union([z.literal(1), z.literal(3)]).optional(),
-  governanceRole: z
-    .union([z.literal('analitik_danisman'), z.literal('yz_arge'), z.literal('izleyici'), z.null()])
-    .optional(),
+  // governanceRole BİLİNÇLİ olarak burada YOK: rol atamanın tek yolu, özel audit
+  // olayı ('user.governance_role_changed', eski→yeni rol detaylı) yazan
+  // PUT /users/:id/governance-role ucudur. Genel güncelleme ucu rol değişimini
+  // yalnız generic 'user.update' audit'iyle yapabiliyordu (sessiz yetki değişimi
+  // yolu) — kapatıldı.
 });
 
 export type AdminUserUpdateInput = z.infer<typeof adminUserUpdateSchema>;
+
+/**
+ * Admin: kullanıcıya yönetişim rolü atama/kaldırma.
+ * null = rolü kaldır, kullanıcıyı normal kullanıcıya döndür.
+ */
+export const adminSetGovernanceRoleSchema = z.object({
+  governanceRole: z.union([
+    z.literal('analitik_danisman'),
+    z.literal('yz_arge'),
+    z.literal('izleyici'),
+    z.null(),
+  ]),
+});
+
+export type AdminSetGovernanceRoleInput = z.infer<typeof adminSetGovernanceRoleSchema>;
 
 export const refreshSchema = z.object({
   refreshToken: z.string().min(20).max(200),

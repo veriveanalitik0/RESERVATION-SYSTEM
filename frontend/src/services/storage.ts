@@ -55,6 +55,17 @@ export const sessionStore = {
     };
     sessionStorage.setItem(key(kind), JSON.stringify(updated));
   },
+
+  /** Oturumdaki subject alanlarını günceller (örn. consent onayı sonrası). */
+  patchSubject(kind: SubjectKind, patch: Partial<AuthUser>): void {
+    const current = this.get(kind);
+    if (!current) return;
+    const updated: StoredSession = {
+      ...current,
+      subject: { ...current.subject, ...patch },
+    };
+    sessionStorage.setItem(key(kind), JSON.stringify(updated));
+  },
 };
 
 export type { StoredSession };

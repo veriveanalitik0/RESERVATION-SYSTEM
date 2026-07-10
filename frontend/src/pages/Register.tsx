@@ -3,7 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
-import { clearCsrfCache } from '../services/api';
+import { api, clearCsrfCache } from '../services/api';
+import { ConsentCard } from '../components/ConsentCard';
+import { AuthBackground } from '../components/AuthBackground';
+import { AuthHeader } from '../components/AuthHeader';
+import type { AuthUser } from '../types';
 
 /**
  * Kullanıcı kayıt sayfası. Login ekranı ile birebir aynı görsel sistem:
@@ -19,7 +23,7 @@ import { clearCsrfCache } from '../services/api';
  * registerSchema rolü zaten kabul etmiyor).
  */
 export default function Register() {
-  const { register } = useAuth();
+  const { register, logout, markConsentAccepted } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState('');
@@ -30,6 +34,9 @@ export default function Register() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // EK-1 beyanı adımı: hesap oluşturuldu ama beyan onaylanmadı — form yerine
+  // onay kartı gösterilir (bir kereye mahsus; onaysız yönlendirme yapılmaz).
+  const [consentPending, setConsentPending] = useState<AuthUser | null>(null);
 
   useEffect(() => {
     clearCsrfCache();
@@ -74,6 +81,11 @@ export default function Register() {
         fullName,
       });
       toast.push('success', `Hoş geldiniz ${subject.fullName}! Hesabınız oluşturuldu.`);
+      // Yeni hesap EK-1 beyanını henüz onaylamadı — yönlendirmeden önce onay kartı.
+      if (subject.consentAcceptedAt === null) {
+        setConsentPending(subject);
+        return;
+      }
       navigate('/rooms', { replace: true });
     } catch (err) {
       const e = err as { message?: string; issues?: Array<{ path: string; message: string }> };
@@ -100,58 +112,56 @@ export default function Register() {
     }
   }
 
+  async function handleConsentAccept() {
+    if (loading || !consentPending) return;
+    setLoading(true);
+    try {
+      const res = await api.acceptConsent('user');
+      markConsentAccepted('user', res.consentAcceptedAt);
+      setConsentPending(null);
+      navigate('/rooms', { replace: true });
+    } catch (err) {
+      toast.push('error', (err as Error).message || 'Beyan onayı kaydedilemedi.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleConsentDecline() {
+    if (loading || !consentPending) return;
+    setLoading(true);
+    try {
+      await logout('user');
+    } catch {
+      // Yerel oturum temizliği logout() finally'sinde yapıldı; ağ hatası
+      // async onClick'ten unhandled rejection olarak kaçmasın diye yutulur.
+    } finally {
+      setConsentPending(null);
+      setLoading(false);
+      toast.push('info', 'EK-1 beyanı onaylanmadan laboratuvar sistemine giriş yapılamaz.');
+    }
+  }
+
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center px-4 py-12 overflow-hidden bg-kt-green-950">
-      {/* ========== ARKAPLAN — Login ile birebir aynı katmanlar ========== */}
-      <div className="absolute inset-0">
-        <img
-          src="/ai-lab-bg.jpg"
-          alt=""
-          aria-hidden="true"
-          className="w-full h-full object-cover animate-ken-burns"
-          loading="eager"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-kt-green-950/65 via-kt-green-900/55 to-kt-green-950/80" />
-      </div>
+      {/* Arkaplan + üst header — Login ile birebir aynı ortak auth bileşenleri */}
+      <AuthBackground greenOrb />
+      <AuthHeader backTo="/" backLabel="← Ana sayfa" variant="overlay" />
 
-      <div className="absolute inset-0 bg-neural-grid-dark opacity-25 pointer-events-none" />
-      <div className="absolute inset-0 bg-ai-mesh animate-mesh-shift pointer-events-none" />
-      <div className="absolute top-1/4 left-10 w-96 h-96 bg-kt-gold-400/25 rounded-full blur-[120px] animate-float-slow pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-kt-violet-500/20 rounded-full blur-[140px] animate-float-medium pointer-events-none" />
-      <div className="absolute top-10 right-1/3 w-72 h-72 bg-kt-green-600/30 rounded-full blur-[100px] pointer-events-none" />
-
-      {/* Üst header — Login ile aynı logo treatment */}
-      <header className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-6 md:px-10 py-6">
-        <Link to="/" aria-label="Ana sayfa" className="relative inline-block group">
-          <div className="absolute inset-0 -m-8 bg-kt-gold-400/25 rounded-full blur-[60px] animate-glow-pulse pointer-events-none" />
-          <div className="absolute inset-0 -m-6 bg-kt-violet-500/20 rounded-full blur-[48px] pointer-events-none" />
-          <div className="absolute inset-0 -m-4 bg-kt-green-600/30 rounded-full blur-[36px] pointer-events-none" />
-          <svg className="absolute -top-4 -right-5 w-7 h-7 text-kt-gold-300 opacity-70 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0 L13.5 8.5 L22 12 L13.5 15.5 L12 24 L10.5 15.5 L2 12 L10.5 8.5 Z" className="animate-pulse-gold" />
-          </svg>
-          <svg className="absolute -bottom-3 -left-4 w-5 h-5 text-kt-gold-300/60 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0 L13.5 8.5 L22 12 L13.5 15.5 L12 24 L10.5 15.5 L2 12 L10.5 8.5 Z" />
-          </svg>
-          <div className="relative aspect-[4/3] h-16 md:h-32">
-            <img
-              src="/ai-lab-logo-hero.png"
-              alt="Kuveyt Türk Yapay Zeka Laboratuvarı"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[60.9%] h-[215%] max-w-none w-auto object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.02]"
-              loading="eager"
-              decoding="async"
-            />
-          </div>
-        </Link>
-        <Link
-          to="/"
-          className="text-sm font-semibold text-white/80 hover:text-kt-gold-300 transition-colors backdrop-blur-sm bg-black/20 px-3 py-1.5 rounded-lg border border-white/10"
-        >
-          ← Ana sayfa
-        </Link>
-      </header>
-
-      {/* Glass dark card — LoginForm yapısıyla aynı */}
-      <div className="relative z-20 w-full max-w-md animate-fade-in">
+      {/* Glass dark card — LoginForm yapısıyla aynı (veya EK-1 beyan adımı) */}
+      <div
+        className={`relative z-20 w-full animate-fade-in ${
+          consentPending ? 'max-w-2xl' : 'max-w-md'
+        }`}
+      >
+        {consentPending ? (
+          <ConsentCard
+            fullName={consentPending.fullName}
+            loading={loading}
+            onAccept={handleConsentAccept}
+            onDecline={handleConsentDecline}
+          />
+        ) : (
         <div className="relative p-8 rounded-2xl backdrop-blur-md bg-black/55 border border-white/10 shadow-2xl">
           {/* Card glow accents */}
           <div className="absolute -top-16 -right-16 w-44 h-44 bg-kt-gold-400/25 rounded-full blur-3xl pointer-events-none" />
@@ -356,6 +366,7 @@ export default function Register() {
             </p>
           </div>
         </div>
+        )}
 
         <p className="text-center text-xs text-white/60 mt-6 backdrop-blur-sm bg-black/20 px-3 py-1.5 rounded-lg inline-block">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-kt-gold-400 mr-2 align-middle animate-pulse-gold" />

@@ -25,8 +25,6 @@ import { config } from './config/env';
 import { openApiDocument } from './openapi';
 
 import unifiedAuthRoutes from './routes/auth.routes';
-import userAuthRoutes from './routes/user-auth.routes';
-import adminAuthRoutes from './routes/admin-auth.routes';
 import userRoutes from './routes/user.routes';
 import adminRoutes from './routes/admin.routes';
 import governanceRoutes from './routes/governance.routes';
@@ -105,9 +103,11 @@ export function buildApp(): express.Express {
   // Public (auth gerektirmeyen) showcase + odalar
   app.use('/api/public', publicRoutes);
 
+  // Tek auth yüzeyi: /api/auth/*. Eski /api/user/auth ve /api/admin/auth
+  // router'ları kaldırıldı — frontend yalnız birleşik akışı kullanıyordu.
+  // NOT: /api/admin/auth/change-password admin.routes.ts içinde
+  // ('/auth/change-password' + /api/admin mount'u) yaşamaya devam eder.
   app.use('/api/auth', unifiedAuthRoutes);          // Birleşik giriş
-  app.use('/api/user/auth', userAuthRoutes);        // Eski yol (geriye uyum)
-  app.use('/api/admin/auth', adminAuthRoutes);      // Eski yol (geriye uyum)
   app.use('/api/user', userRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/governance', governanceRoutes);

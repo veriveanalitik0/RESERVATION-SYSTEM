@@ -25,6 +25,7 @@
  */
 import { nanoid } from 'nanoid';
 import { dbAll, dbOne, dbRun, dbTx } from '../db/schema';
+import { sqlDateTimeLocal } from '../utils/dates';
 import { HttpError } from '../middleware/error.middleware';
 import { LICENSE_CATALOG, type LicenseInfo } from './license.service';
 import {
@@ -484,7 +485,7 @@ export async function createLicenseRequest(
   const autoRejected = input.involvesRealData === true;
   const status: LicenseRequestStatus = autoRejected ? 'rejected' : 'pending';
   const adminFeedback = autoRejected ? AUTO_REJECT_FEEDBACK : null;
-  const reviewedAt = autoRejected ? new Date().toISOString() : null;
+  const reviewedAt = autoRejected ? sqlDateTimeLocal() : null;
 
   await dbTx(async () => {
     await dbRun(`INSERT INTO license_requests
@@ -596,7 +597,7 @@ export async function updateLicenseRequest(
   const autoRejected = input.involvesRealData === true;
   const status: LicenseRequestStatus = autoRejected ? 'rejected' : 'pending';
   const adminFeedback = autoRejected ? AUTO_REJECT_FEEDBACK : existing.admin_feedback;
-  const reviewedAt = autoRejected ? new Date().toISOString() : existing.reviewed_at;
+  const reviewedAt = autoRejected ? sqlDateTimeLocal() : existing.reviewed_at;
 
   await dbTx(async () => {
     // TOCTOU guard: yukarıdaki SELECT ile bu UPDATE arasında statü değişmiş olabilir
@@ -810,21 +811,27 @@ export async function reviewLicenseRequest(
   // TOCTOU/eşzamanlı-inceleme guard: yalnız hâlâ pending/feedback statüsündeyse
   // sonuçlandır → paralel approve/reject "son-yazan-kazanır" desenkronizasyonunu önle
   // (status=rejected iken lifecycle=development gibi tutarsızlık oluşamaz).
-  const reviewUpd = await dbRun(`UPDATE license_requests SET
-       status = ?,
-       admin_feedback = ?,
-       reviewed_by = ?,
-       reviewed_at = CURRENT_TIMESTAMP,
-       updated_at = CURRENT_TIMESTAMP
-     WHERE id = ? AND status IN ('pending', 'feedback_requested')`, [nextStatus, input.adminFeedback?.trim() || null, reviewerId, requestId]);
-  if (reviewUpd.changes === 0) {
-    throw new HttpError(409, 'Bu başvuru bu sırada başka bir incelemeci tarafından sonuçlandırıldı.', 'LICENSE_REQUEST_CONFLICT');
-  }
+  //
+  // TEK TRANSACTION: statü değişimi + (onayda) yaşam döngüsü geçişi/kalite kapıları
+  // birlikte commit olur. Aksi halde onApplicationApproved yarıda kesilirse
+  // "approved ama kapısız" kısmi durum kalıyordu; artık hata her ikisini geri alır.
+  await dbTx(async () => {
+    const reviewUpd = await dbRun(`UPDATE license_requests SET
+         status = ?,
+         admin_feedback = ?,
+         reviewed_by = ?,
+         reviewed_at = CURRENT_TIMESTAMP,
+         updated_at = CURRENT_TIMESTAMP
+       WHERE id = ? AND status IN ('pending', 'feedback_requested')`, [nextStatus, input.adminFeedback?.trim() || null, reviewerId, requestId]);
+    if (reviewUpd.changes === 0) {
+      throw new HttpError(409, 'Bu başvuru bu sırada başka bir incelemeci tarafından sonuçlandırıldı.', 'LICENSE_REQUEST_CONFLICT');
+    }
 
-  // Onaylandıysa projeyi geliştirme aşamasına taşı (kalite kapıları oluşur).
-  if (nextStatus === 'approved') {
-    await onApplicationApproved(requestId, reviewerId, actorType);
-  }
+    // Onaylandıysa projeyi geliştirme aşamasına taşı (kalite kapıları oluşur).
+    if (nextStatus === 'approved') {
+      await onApplicationApproved(requestId, reviewerId, actorType);
+    }
+  });
 
   const result = (await getAdminLicenseRequestById(requestId))!;
   const reqTitle = result.requestTitle ?? result.licenseName;

@@ -43,9 +43,9 @@ interface AuthContextValue extends AuthState {
     // governanceRole REMOVED (C2) — registration self-service ile yönetişim
     // rolü atanamaz; admin atar.
   }) => Promise<{ kind: SubjectKind; subject: AuthUser }>;
-  loginUser: (email: string, password: string) => Promise<void>;
-  loginAdmin: (email: string, password: string) => Promise<void>;
   logout: (kind: SubjectKind) => Promise<void>;
+  /** EK-1 beyanı onaylandı — oturumdaki subject'in consentAcceptedAt alanını günceller. */
+  markConsentAccepted: (kind: SubjectKind, acceptedAt: string) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -186,31 +186,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession]
   );
 
-  const loginUser = useCallback(
-    async (email: string, password: string) => {
-      const res = await api.loginUser(email, password);
-      sessionStore.save(
-        'user',
-        { accessToken: res.accessToken, expiresIn: res.expiresIn },
-        res.user
-      );
-      applySession('user', res.user);
-    },
-    [applySession]
-  );
-
-  const loginAdmin = useCallback(
-    async (email: string, password: string) => {
-      const res = await api.loginAdmin(email, password);
-      sessionStore.save(
-        'admin',
-        { accessToken: res.accessToken, expiresIn: res.expiresIn },
-        res.admin
-      );
-      applySession('admin', res.admin);
-    },
-    [applySession]
-  );
+  const markConsentAccepted = useCallback((kind: SubjectKind, acceptedAt: string) => {
+    sessionStore.patchSubject(kind, { consentAcceptedAt: acceptedAt });
+    // Aynı subject birden çok slot'ta olabilir (user + governance türev slotları) —
+    // hepsini güncelle ki modal/kart tekrar tetiklenmesin.
+    setState((curr) => {
+      const target = curr[kind];
+      if (!target) return curr;
+      const next: AuthState = { ...curr };
+      for (const k of ALL_KINDS) {
+        const s = next[k];
+        if (s && s.id === target.id) {
+          next[k] = { ...s, consentAcceptedAt: acceptedAt };
+        }
+      }
+      return next;
+    });
+  }, []);
 
   const logout = useCallback(async (kind: SubjectKind) => {
     try {
@@ -228,8 +220,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ ...state, login, completeMfaLogin, register, loginUser, loginAdmin, logout }),
-    [state, login, completeMfaLogin, register, loginUser, loginAdmin, logout]
+    () => ({
+      ...state,
+      login,
+      completeMfaLogin,
+      register,
+      logout,
+      markConsentAccepted,
+    }),
+    [state, login, completeMfaLogin, register, logout, markConsentAccepted]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

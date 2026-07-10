@@ -1,10 +1,4 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import type * as React from 'react';
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 /**
  * Yerel saat diliminde YYYY-MM-DD. toISOString() UTC'ye çevirdiği için

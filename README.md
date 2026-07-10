@@ -123,21 +123,25 @@ JWT anahtarları image'e gömülmez; `backend/keys/*.pem` salt-okunur volume ile
 Aşağıdaki liste başlıca uçları gösterir; sistem rol-bazlı router'lara bölünmüştür
 (`user`, `admin`, `governance`, `public`). Tam liste için `backend/src/routes/`.
 
-### Auth (User / Admin ayrı)
-- `POST /api/{user|admin}/auth/login` · `…/refresh` · `…/logout` · `GET …/auth/me`
-- `POST /api/admin/auth/mfa/verify` — admin TOTP MFA challenge (kayıtlıysa zorunlu)
+### Auth (birleşik — `/api/auth/*`)
+- `POST /api/auth/login` · `…/register` · `…/refresh` · `…/logout` — backend e-postayı
+  hem `admins` hem `users` tablosunda arar, `type` alanıyla rolü döner
+- `POST /api/auth/mfa/verify` — admin TOTP MFA challenge (kayıtlıysa zorunlu)
+- `POST /api/auth/consent` — EK-1 beyanı onayı (bir kereye mahsus)
+- `POST /api/admin/auth/change-password` — admin parola değişikliği
 
 ### User (`/api/user/*`)
 - `GET|POST /bookings` · `GET|PUT /bookings/:id` · `POST /bookings/:id/cancel` (onaylı iptal) · `PUT /bookings/:id/progress` (ilerleme notu)
-- `GET /rooms` · `GET /rooms/appointment-heatmap` · `GET|POST /appointments` · `GET /dashboard`
+- `GET /rooms` · `GET /rooms/appointment-heatmap` · `GET|POST /appointments`
 - `GET|POST /waitlist` · `POST /licenses/requests` · `POST /hardware/requests` · `POST /support/requests`
 - `POST /visuals` (görsel üretimi) · `GET /leaderboard` · showcase beğeni/yorum
-- `GET /export` · `DELETE /purge` (KVKK veri ihracı / hesap silme)
+- `GET /me/export` · `POST /me/purge` (KVKK veri ihracı / hesap silme)
 
 ### Admin (`/api/admin/*`) — GET'ler `izleyici`/danışman/arge için salt-okunur
 - `GET /bookings?status=…` · `GET /bookings/:id` · `POST /bookings/:id/review`
-- `GET /users` · `PUT|DELETE /users/:id` · `PATCH /users/:id/governance-role`
-- `GET /stats` · `GET /analytics` · `GET /audit` (+ CSV) · `GET /backups`
+- `GET /users` · `PUT|DELETE /users/:id` · `PUT /users/:id/governance-role`
+- `GET /stats` · `GET /analytics` · `GET /audit` (+ CSV) · `GET /backup` (uygulama içi liste;
+  gerçek yedekler prod'da `postgres-backup` sidecar'ında — bkz. `docs/backup-restore-runbook.md`)
 - license/hardware/support talep incelemeleri · MFA enroll/disable
 
 ### Governance (`/api/governance/*`) — yaşam döngüsü
@@ -157,6 +161,10 @@ Auth & çekirdek:
 Yönetişim & talepler:
 - `license_requests` (+ `license_request_items`) · `hardware_requests` · `support_requests`
 - `quality_gates` · `human_approvals` · `project_stage_events` — yaşam döngüsü zaman çizelgesi
+
+Kütüphane:
+- `books` (+ `book_loans`) — AI Lab kitaplığı: ödünç alma, onay ve uzatma akışı
+  (`/kutuphane` ve `/admin/kutuphane` sayfaları)
 
 Etkileşim & sistem:
 - `showcase_likes`, `showcase_comments` · `notifications` · `project_embeddings` (benzerlik) · `visuals` (üretilen görseller)

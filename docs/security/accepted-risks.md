@@ -44,3 +44,67 @@ yoktur → bu açığın production saldırı yüzeyi **yoktur**.
   planlandığında bu madde kapatılır.
 - Açığın dev-only olmaktan çıkıp prod build çıktısını etkilediği yeni bir advisory
   yayınlanırsa derhal yeniden değerlendirilir.
+
+---
+
+## AR-002 — Access token sessionStorage'da (XSS'e açık depolama)
+
+- **Tarih:** 2026-07-10
+- **Bileşen:** `frontend/src/services/storage.ts` (sessionStore)
+- **Durum:** KABUL EDİLDİ / ERTELENDİ (demo tehdit modeli)
+
+### Etki
+
+Access token (15 dk ömürlü) `sessionStorage`'da tutulur; başarılı bir XSS
+token'ı okuyabilir. README "bankacılık standartlarına uygun" iddiasıyla
+gerilim yaratır — bu kayıt, farkın bilinçli olduğunu belgeler.
+
+### Gerekçe
+
+- Refresh token zaten **HttpOnly+Secure cookie**'dedir (XSS okuyamaz);
+  sessionStorage'daki yalnız kısa ömürlü access token'dır.
+- CSP `script-src 'self'` (unsafe-inline yok) + Zod input validasyonu XSS
+  yüzeyini daraltır; demo ortamında gerçek müşteri verisi yoktur.
+- Tam cookie-tabanlı access token, SSE/queryparam auth akışının yeniden
+  tasarımını gerektirir — demo kapsamında ertelendi.
+
+### Telafi edici kontroller
+
+- 15 dk access TTL + refresh rotation + reuse-detection (çalınan refresh
+  tekrar kullanılırsa tüm zincir revoke edilir).
+- Tek-aktif-oturum politikası: yeni login eski refresh'leri revoke eder.
+
+### Yeniden değerlendirme tetikleyicisi
+
+- Gerçek kurumsal veriyle pilot/prod kullanım kararı → cookie-tabanlı access
+  token + Trusted Types zorunlu hale gelir.
+
+---
+
+## AR-003 — EK-1 beyan zorunluluğu istemci-tarafı (sunucu middleware'i yok)
+
+- **Tarih:** 2026-07-10
+- **Bileşen:** `frontend/src/components/ProtectedRoute.tsx` (ConsentGate),
+  `POST /api/auth/consent`
+- **Durum:** KABUL EDİLDİ / ERTELENDİ
+
+### Etki
+
+EK-1 "Okudum, Kabul Ettim" beyanı UI'da iki katmanla zorlanır (login/register
+adımı + ProtectedRoute kapısı); ancak API'ye **doğrudan** istek atan bir
+kullanıcı (curl/Postman) beyan onayı olmadan user endpoint'lerini çağırabilir.
+Uygulama arayüzünden atlatma yolu kapatılmıştır.
+
+### Gerekçe
+
+- Sunucu-tarafı zorlamak `requireUser`/`requireAnySubject` guard'larına consent
+  kontrolü eklemeyi ve tüm route testlerinin consent'li fixture'larla
+  güncellenmesini gerektirir; demo kapsam/fayda dengesinde ertelendi.
+- Onay audit'lidir (`user.consent.accepted`) ve DB'de tarih damgasıyla kalıcıdır;
+  uyum raporlaması sunucu verisinden yapılabilir.
+
+### Yeniden değerlendirme tetikleyicisi
+
+- Gerçek kullanıcı verisiyle kullanım veya denetim (compliance) gereksinimi →
+  `buildAuthMiddleware`'e consent kontrolü (admin + /api/auth/consent hariç)
+  eklenir; test fixture'ları consent'li kullanıcı üretir.

@@ -11,6 +11,7 @@ import { nanoid } from 'nanoid';
 import { config } from '../config/env';
 import { dbOne, dbRun } from '../db/schema';
 import { HttpError } from '../middleware/error.middleware';
+import { sqlDateTimeLocal } from '../utils/dates';
 import type { AdminRecord, SubjectKind, UserRecord } from '../types/auth.types';
 import {
   issueRefreshToken,
@@ -85,7 +86,7 @@ async function incrementFailedLogin(kind: SubjectKind, id: string, currentFails:
   const newCount = currentFails + 1;
   const shouldLock = newCount >= config.maxLoginAttempts;
   const lockUntil = shouldLock
-    ? new Date(Date.now() + config.loginLockoutMinutes * 60_000).toISOString()
+    ? sqlDateTimeLocal(new Date(Date.now() + config.loginLockoutMinutes * 60_000))
     : null;
 
   await dbRun(`UPDATE ${table}
@@ -108,6 +109,8 @@ export interface LoginResult {
     fullName: string;
     role: string;
     governanceRole?: 'analitik_danisman' | 'yz_arge' | 'izleyici' | null;
+    /** EK-1 beyanı onay zamanı — user-tabanlı kind'larda döner; NULL ise onay kartı gösterilir. */
+    consentAcceptedAt?: string | null;
   };
   locked: boolean;
 }
@@ -170,6 +173,9 @@ export async function login(
       fullName: record.full_name,
       role: record.role,
       ...(governanceRole !== undefined ? { governanceRole } : {}),
+      ...(kind !== 'admin'
+        ? { consentAcceptedAt: (record as UserRecord).consent_accepted_at ?? null }
+        : {}),
     },
     locked: false,
   };
@@ -240,8 +246,15 @@ export async function registerUser(input: RegisterInput): Promise<{ id: string; 
  */
 const SUBJECT_CACHE_TTL_MS = 30_000;
 const subjectCache = new Map<string, { row: SubjectRecord | undefined; expiresAt: number }>();
+// Repopülasyon yarışı koruması: UPDATE'ten ÖNCE satırı okumuş uçuştaki bir
+// findSubjectById, invalidateSubjectCache'ten SONRA bayat satırı cache'e geri
+// yazabilirdi (30sn'ye kadar eski yetkiyle erişim). Nesil sayacı: sorgu
+// başlamadan nesil kaydedilir; invalidation nesli artırır; sorgu dönünce nesil
+// değiştiyse sonuç cache'e YAZILMAZ (yalnız döndürülür).
+let subjectCacheGeneration = 0;
 
 export function invalidateSubjectCache(id?: string): void {
+  subjectCacheGeneration++;
   if (!id) {
     subjectCache.clear();
     return;
@@ -255,6 +268,7 @@ export async function findSubjectById(kind: SubjectKind, id: string): Promise<Su
   const cacheKey = `${kind}:${id}`;
   const cached = subjectCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.row;
+  const generationAtRead = subjectCacheGeneration;
 
   const table = tableFor(kind);
   // Yalnız auth katmanının ihtiyaç duyduğu kolonlar — profile_photo/bio gibi
@@ -282,7 +296,10 @@ export async function findSubjectById(kind: SubjectKind, id: string): Promise<Su
     }
   }
 
-  subjectCache.set(cacheKey, { row: result, expiresAt: Date.now() + SUBJECT_CACHE_TTL_MS });
+  // Sorgu sürerken invalidation geldiyse (nesil değişti) bayat sonucu cache'leme.
+  if (generationAtRead === subjectCacheGeneration) {
+    subjectCache.set(cacheKey, { row: result, expiresAt: Date.now() + SUBJECT_CACHE_TTL_MS });
+  }
   return result;
 }
 
@@ -384,7 +401,50 @@ export async function unifiedLogin(email: string, password: string): Promise<Log
       fullName: userRecord.full_name,
       role: userRecord.role,
       governanceRole,
+      consentAcceptedAt: (userRecord as UserRecord).consent_accepted_at ?? null,
     },
     locked: false,
   };
+}
+
+/**
+ * EK-1 "Okudum, Kabul Ettim" beyanı sürümü — metin güncellenirse artırılır;
+ * ileride sürüm karşılaştırmasıyla yeniden onay istenebilir.
+ */
+export const CONSENT_VERSION = 'EK-1.v1';
+
+/**
+ * EK-1 beyanı onayını kaydeder (bir kereye mahsus; idempotent — tekrar çağrı
+ * mevcut onay zamanını korur). Yalnız users tablosu: admin hesapları beyan
+ * kapsamı dışındadır.
+ */
+export async function acceptUserConsent(
+  userId: string
+): Promise<{ consentAcceptedAt: string; alreadyAccepted: boolean }> {
+  const existing = await dbOne(
+    'SELECT consent_accepted_at FROM users WHERE id = ? AND status = 1 LIMIT 1',
+    [userId]
+  ) as { consent_accepted_at: string | null } | undefined;
+  if (!existing) {
+    throw new HttpError(404, 'Kullanıcı bulunamadı.', 'USER_NOT_FOUND');
+  }
+  if (existing.consent_accepted_at) {
+    return { consentAcceptedAt: existing.consent_accepted_at, alreadyAccepted: true };
+  }
+
+  await dbRun(
+    `UPDATE users
+       SET consent_accepted_at = to_char(now(), 'YYYY-MM-DD HH24:MI:SS'),
+           consent_version = ?,
+           updated_at = CURRENT_TIMESTAMP
+     WHERE id = ? AND consent_accepted_at IS NULL`,
+    [CONSENT_VERSION, userId]
+  );
+  invalidateSubjectCache(userId);
+
+  const updated = await dbOne(
+    'SELECT consent_accepted_at FROM users WHERE id = ? LIMIT 1',
+    [userId]
+  ) as { consent_accepted_at: string };
+  return { consentAcceptedAt: updated.consent_accepted_at, alreadyAccepted: false };
 }

@@ -11,6 +11,9 @@ import { nanoid } from 'nanoid';
 import type { Book, BookLoan } from '@klab/shared';
 import { dbAll, dbOne, dbRun, dbTx } from '../db/schema';
 import { HttpError } from '../middleware/error.middleware';
+// Kanonik format (ADR-001): book_loans zaman kolonlarına ISO değil
+// 'YYYY-MM-DD HH:MM:SS' (yerel) yazılır — TEXT leksik karşılaştırma tutarlılığı.
+import { sqlDateTimeLocal } from '../utils/dates';
 import { recordAudit } from './audit.service';
 import type { CreateBookInput, UpdateBookInput } from '../validators/schemas';
 
@@ -332,13 +335,13 @@ export async function borrowBook(
     );
 
     const id = nanoid();
-    const nowIso = new Date().toISOString();
+    const nowSql = sqlDateTimeLocal();
     // due_at şimdilik tahmini (onayda borrowed_at + period_days ile yeniden hesaplanır).
-    const dueIso = new Date(Date.now() + periodDays * ONE_DAY_MS).toISOString();
+    const dueSql = sqlDateTimeLocal(new Date(Date.now() + periodDays * ONE_DAY_MS));
     await dbRun(
       `INSERT INTO book_loans (id, book_id, user_id, borrowed_at, due_at, status, period_days)
        VALUES (?, ?, ?, ?, ?, 'pending', ?)`,
-      [id, bookId, userId, nowIso, dueIso, periodDays]
+      [id, bookId, userId, nowSql, dueSql, periodDays]
     );
     return id;
   });
@@ -376,7 +379,7 @@ export async function returnBook(userId: string, loanId: string): Promise<BookLo
       `UPDATE book_loans SET status = 'returned', returned_at = ?,
                              extension_requested_days = NULL, extension_requested_at = NULL
        WHERE id = ? AND status IN ('active', 'overdue')`,
-      [new Date().toISOString(), loanId]
+      [sqlDateTimeLocal(), loanId]
     );
     if (res.changes === 0) {
       throw new HttpError(409, 'Bu ödünç zaten iade edilmiş.', 'ALREADY_RETURNED');
@@ -423,7 +426,7 @@ export async function requestExtension(
   }
   await dbRun(
     `UPDATE book_loans SET extension_requested_days = ?, extension_requested_at = ? WHERE id = ? AND user_id = ?`,
-    [days, new Date().toISOString(), loanId, userId]
+    [days, sqlDateTimeLocal(), loanId, userId]
   );
   recordAudit({
     eventType: 'book.extension_requested',
@@ -509,14 +512,14 @@ export async function approveLoan(adminId: string, loanId: string): Promise<Book
     if (loan.status !== 'pending') {
       throw new HttpError(409, 'Yalnız bekleyen talep onaylanabilir.', 'LOAN_NOT_PENDING');
     }
-    const nowIso = new Date().toISOString();
-    const dueIso = new Date(Date.now() + loan.period_days * ONE_DAY_MS).toISOString();
+    const nowSql = sqlDateTimeLocal();
+    const dueSql = sqlDateTimeLocal(new Date(Date.now() + loan.period_days * ONE_DAY_MS));
     // Kopya talep anında rezerve edildi; onayda yalnız aktifleştir + süreyi başlat.
     const res = await dbRun(
       `UPDATE book_loans SET status = 'active', borrowed_at = ?, due_at = ?,
                              reviewed_by = ?, reviewed_at = ?
        WHERE id = ? AND status = 'pending'`,
-      [nowIso, dueIso, adminId, nowIso, loanId]
+      [nowSql, dueSql, adminId, nowSql, loanId]
     );
     if (res.changes === 0) {
       throw new HttpError(409, 'Yalnız bekleyen talep onaylanabilir.', 'LOAN_NOT_PENDING');
@@ -547,7 +550,7 @@ export async function rejectLoan(adminId: string, loanId: string): Promise<BookL
     const res = await dbRun(
       `UPDATE book_loans SET status = 'rejected', reviewed_by = ?, reviewed_at = ?
        WHERE id = ? AND status = 'pending'`,
-      [adminId, new Date().toISOString(), loanId]
+      [adminId, sqlDateTimeLocal(), loanId]
     );
     if (res.changes === 0) {
       throw new HttpError(409, 'Yalnız bekleyen talep reddedilebilir.', 'LOAN_NOT_PENDING');
@@ -587,17 +590,17 @@ export async function approveExtension(adminId: string, loanId: string): Promise
     if (loan.status !== 'active' && loan.status !== 'overdue') {
       throw new HttpError(409, 'Yalnız aktif/gecikmiş ödünç için süre uzatılabilir.', 'NOT_EXTENDABLE');
     }
-    const newDue = new Date(
+    const newDue = sqlDateTimeLocal(new Date(
       new Date(loan.due_at).getTime() + loan.extension_requested_days * ONE_DAY_MS
-    ).toISOString();
+    ));
     // Gecikmiş ödünç, uzatma ile yeniden gelecekteyse 'active'e döner.
     const newStatus =
-      loan.status === 'overdue' && newDue > new Date().toISOString() ? 'active' : loan.status;
+      loan.status === 'overdue' && newDue > sqlDateTimeLocal() ? 'active' : loan.status;
     const res = await dbRun(
       `UPDATE book_loans SET due_at = ?, status = ?, extension_requested_days = NULL,
                              extension_requested_at = NULL, reviewed_by = ?, reviewed_at = ?
        WHERE id = ? AND status IN ('active', 'overdue') AND extension_requested_at IS NOT NULL`,
-      [newDue, newStatus, adminId, new Date().toISOString(), loanId]
+      [newDue, newStatus, adminId, sqlDateTimeLocal(), loanId]
     );
     if (res.changes === 0) {
       throw new HttpError(409, 'Yalnız aktif/gecikmiş ödünç için süre uzatılabilir.', 'NOT_EXTENDABLE');
@@ -627,7 +630,7 @@ export async function rejectExtension(adminId: string, loanId: string): Promise<
     `UPDATE book_loans SET extension_requested_days = NULL, extension_requested_at = NULL,
                            reviewed_by = ?, reviewed_at = ?
      WHERE id = ?`,
-    [adminId, new Date().toISOString(), loanId]
+    [adminId, sqlDateTimeLocal(), loanId]
   );
   recordAudit({
     eventType: 'book.extension_rejected',
@@ -651,7 +654,7 @@ export async function rejectExtension(adminId: string, loanId: string): Promise<
 export async function markOverdueLoans(): Promise<number> {
   const res = await dbRun(
     `UPDATE book_loans SET status = 'overdue' WHERE status = 'active' AND due_at < ?`,
-    [new Date().toISOString()]
+    [sqlDateTimeLocal()]
   );
   return res.changes;
 }

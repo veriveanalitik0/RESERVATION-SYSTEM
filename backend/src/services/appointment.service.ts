@@ -27,7 +27,7 @@ import { dbAll, dbOne, dbRun, dbTx } from '../db/schema';
 import { HttpError } from '../middleware/error.middleware';
 import { recordAudit } from './audit.service';
 import { broadcastBooking, broadcastToAdmins } from './sse.service';
-import { ymdLocal } from '../utils/dates';
+import { ymdLocal, sqlDateTimeLocal } from '../utils/dates';
 import type { Appointment as SharedAppointment, AppointmentStatus } from '@klab/shared';
 
 export type { AppointmentStatus };
@@ -138,8 +138,13 @@ export async function createAppointment(
 
 
   const id = nanoid();
-  const startIso = start.toISOString();
-  const endIso = end.toISOString();
+  // Kanonik format (ADR-001): start_at/end_at 'YYYY-MM-DD HH:MM:SS' (yerel)
+  // yazılır. Önceden ISO yazılıyordu; markPastAppointmentsCompleted'ın boşluk-
+  // formatlı now() kıyası aynı gün biten randevuları ancak ertesi gün
+  // tamamlıyordu — yazım formatı kıyasla hizalandı (eski satırlar 0009'da
+  // normalize edildi).
+  const startSql = sqlDateTimeLocal(start);
+  const endSql = sqlDateTimeLocal(end);
   const title = (input.title ?? '').trim().slice(0, 120);
   const notes = (input.notes ?? '').trim().slice(0, 500);
 
@@ -191,7 +196,7 @@ export async function createAppointment(
     const ownConflict = await dbOne(`SELECT id FROM appointments
          WHERE user_id = ? AND status = 'scheduled'
            AND NOT (end_at <= ? OR start_at >= ?)
-         LIMIT 1`, [userId, startIso, endIso]);
+         LIMIT 1`, [userId, startSql, endSql]);
     if (ownConflict) {
       throw new HttpError(
         409,
@@ -206,7 +211,7 @@ export async function createAppointment(
 
     const overlapCount = await dbOne(`SELECT COUNT(*) AS c FROM appointments
          WHERE room_id = ? AND status = 'scheduled'
-           AND NOT (end_at <= ? OR start_at >= ?)`, [booking.room_id, startIso, endIso]) as { c: number };
+           AND NOT (end_at <= ? OR start_at >= ?)`, [booking.room_id, startSql, endSql]) as { c: number };
     if (overlapCount.c >= capacity) {
       throw new HttpError(
         409,
@@ -222,8 +227,8 @@ export async function createAppointment(
       booking.id,
       userId,
       booking.room_id,
-      startIso,
-      endIso,
+      startSql,
+      endSql,
       title || booking.project_name,
       notes]);
 
@@ -235,7 +240,7 @@ export async function createAppointment(
     subjectId: userId,
     subjectType: 'user',
     success: true,
-    details: { appointmentId: id, bookingId: input.bookingId, roomId, startAt: startIso, endAt: endIso },
+    details: { appointmentId: id, bookingId: input.bookingId, roomId, startAt: startSql, endAt: endSql },
   });
 
   const created = await getAppointmentById(id, userId, true) as AppointmentDto;

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """AI LAB Kitap Listesi.xlsx → kitap verisi + internetten kapak görseli → SQL/JSON.
 
+TEK SEFERLİK ÜRETİCİ (arşiv): çıktısı backend/src/db/seed-books.ts olarak commit'lendi.
+Girdisi (xlsx) repo'da DEĞİLDİR; hiçbir pipeline'a bağlı değildir. Kitap listesi
+değişmedikçe çalıştırmaya gerek yok.
+
 Kapak: önce Google Books (TR kapsamı iyi), sonra Open Library fallback. Bulunamazsa
 cover_image_url NULL (UI placeholder gösterir). Çıktı: /tmp/books_seed.sql + /tmp/books.json
 """

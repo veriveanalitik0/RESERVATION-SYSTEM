@@ -6,6 +6,8 @@ import { ymdLocal } from '../utils/dates';
 import { maskToWeekdays } from '../utils/weekdays';
 import { config } from '../config/env';
 
+import type { Room as SharedRoom } from '@klab/shared';
+
 const ALL_WEEKDAYS = [1, 2, 3, 4, 5, 6, 7];
 
 /** YYYY-MM-DD → ertesi gün (YYYY-MM-DD). nextAvailableDate hesabı için. */
@@ -40,31 +42,11 @@ function mergeDateRanges(
   return merged;
 }
 
-export interface RoomDto {
-  id: string;
-  code: string;
-  name: string;
-  district: string;
-  neighborhood: string;
-  capacity: number;
-  description: string | null;
-  theme: string;
-  /** Resmi cihaz adı — örn. "NVIDIA DGX Spark", "2× MAC STUDIO", "AI Deneyim Alanı". */
-  equipment: string;
-  /** Oda kategorisi: tekli pod / deneyim alanı / tribün. */
-  roomType: 'pod' | 'experience' | 'tribune';
-  /** Cihaz teknik özellikleri — JSON dizi [{ label, value }] ya da null. */
-  specs: string | null;
-  isAvailable: boolean;
-  nextAvailableDate: string | null;
-  /**
-   * Bugün itibarıyla rezervasyon yapılabilir (boş) haftanın günleri (1=Pzt..7=Paz).
-   * Bugünü kapsayan booking'lerin weekday_mask'i çıkarılarak hesaplanır; tamamen
-   * boş oda için [1..7], tamamen dolu oda için []. Karttaki "müsait vakitler"
-   * göstergesi için.
-   */
-  availableWeekdays: number[];
-}
+/**
+ * Oda DTO — TEK kaynak @klab/shared (frontend ile birebir aynı tip).
+ * Alan ekleme/değiştirme shared/index.d.ts üzerinden yapılır.
+ */
+export type RoomDto = SharedRoom;
 
 interface RoomRow {
   id: string;

@@ -141,7 +141,7 @@ export interface KioskData {
 /* ============================================================
  * ÇEKİRDEK DOMAIN TİPLERİ — backend DTO'ları ile frontend tipleri
  * arasındaki kopyala-yapıştır drift'ini kapatmak için TEK kaynak.
- * Backend: BookingDto/WaitlistEntryDto/AppointmentDto bu tiplere alias'tır.
+ * Backend: BookingDto/WaitlistEntryDto/AppointmentDto/RoomDto bu tiplere alias'tır.
  * Frontend: types/index.ts buradan re-export eder.
  * ============================================================ */
 
@@ -159,6 +159,33 @@ export type BookingStatus = 'pending' | 'approved' | 'rejected' | 'feedback_requ
 export type BookingPeriod = '1w' | '2w' | '1m';
 
 export type LifecycleStage = 'application' | 'development' | 'stage' | 'production' | 'live';
+
+export interface Room {
+  id: string;
+  code: string;
+  name: string;
+  district: string;
+  neighborhood: string;
+  capacity: number;
+  description: string | null;
+  /** Oda görsel teması (robot/pc/neural/chatbot/data/brain/code/cloud/vector/agent) — DB'den serbest string döner. */
+  theme: string;
+  /** Resmi cihaz adı — örn. "NVIDIA DGX Spark", "2× MAC STUDIO", "AI Deneyim Alanı". */
+  equipment: string;
+  /** Oda kategorisi: tekli pod / deneyim alanı / tribün. */
+  roomType: 'pod' | 'experience' | 'tribune';
+  /** Cihaz teknik özellikleri — JSON dizi [{ label, value }] ya da null. */
+  specs: string | null;
+  isAvailable: boolean;
+  nextAvailableDate: string | null;
+  /**
+   * Bugün itibarıyla rezervasyon yapılabilir (boş) haftanın günleri (1=Pzt..7=Paz).
+   * Bugünü kapsayan booking'lerin weekday_mask'i çıkarılarak hesaplanır; tamamen
+   * boş oda için [1..7], tamamen dolu oda için []. Karttaki "müsait vakitler"
+   * göstergesi için.
+   */
+  availableWeekdays: number[];
+}
 
 export interface Booking {
   id: string;

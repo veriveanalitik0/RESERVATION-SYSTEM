@@ -12,6 +12,7 @@ import type {
   WaitlistEntry,
   AppointmentStatus,
   Appointment,
+  Room,
   VisualStatus,
   VisualVariant,
   ShowcaseItem,
@@ -38,6 +39,7 @@ export type {
   WaitlistEntry,
   AppointmentStatus,
   Appointment,
+  Room,
   VisualStatus,
   VisualVariant,
   ShowcaseItem,
@@ -61,6 +63,12 @@ export interface AuthUser {
   role: string;
   /** Sadece user'lar için anlamlı; admin'ler için undefined. */
   governanceRole?: UserGovernanceRole | null;
+  /**
+   * EK-1 "Okudum, Kabul Ettim" beyanı onay zamanı. User-tabanlı hesaplarda
+   * null ise login/register akışında bir kereye mahsus onay kartı gösterilir;
+   * admin'ler için undefined (beyan kapsamı dışı).
+   */
+  consentAcceptedAt?: string | null;
 }
 
 export interface UserProfile {
@@ -114,28 +122,10 @@ export interface AuthTokens {
   expiresIn: number;
 }
 
+/** Bilinen oda tema anahtarları (Room.theme değerleri — API'de serbest string). */
 export type RoomTheme = 'robot' | 'pc' | 'neural' | 'chatbot' | 'data' | 'brain' | 'code' | 'cloud' | 'vector' | 'agent';
 
-export interface Room {
-  id: string;
-  code: string;
-  name: string;
-  district: string;
-  neighborhood: string;
-  capacity: number;
-  description: string | null;
-  theme: RoomTheme;
-  /** Resmi cihaz adı — örn. "NVIDIA DGX Spark", "2× Mac Studio", "AI Deneyim Alanı". */
-  equipment: string;
-  /** Oda kategorisi: tekli pod / deneyim alanı / tribün. */
-  roomType: 'pod' | 'experience' | 'tribune';
-  /** Cihaz teknik özellikleri — JSON dizi [{ label, value }] ya da null. */
-  specs: string | null;
-  isAvailable: boolean;
-  nextAvailableDate: string | null;
-  /** Bugün itibarıyla boş (rezerve edilebilir) haftanın günleri (1=Pzt..7=Paz). */
-  availableWeekdays: number[];
-}
+// Room → @klab/shared (üstte re-export edildi).
 
 /** Oda müsaitlik detayı — kart açılınca "müsait vakitler" göstergesi için. */
 export interface RoomBusyRange {

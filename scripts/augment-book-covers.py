@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Kapağı bulunamayan kitaplar için 2. geçiş: Google Books (yavaş tempo + 429 backoff).
 Mevcut /tmp/books.json'u okur, eksikleri doldurur, /tmp/books.json + /tmp/books_seed.sql'i yeniden yazar.
+
+TEK SEFERLİK ÜRETİCİ (arşiv): fetch-book-covers.py ile birlikte kullanılır; çıktısı
+backend/src/db/seed-books.ts olarak commit'lendi. Pipeline bağlantısı yoktur.
 """
 import json, time, sys, re, urllib.parse, urllib.request, urllib.error
 

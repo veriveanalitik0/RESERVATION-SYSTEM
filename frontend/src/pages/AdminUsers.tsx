@@ -28,7 +28,7 @@ export default function AdminUsers() {
   const [filter, setFilter] = useState<'all' | 'active' | 'disabled'>('all');
   const [department, setDepartment] = useState<string>('');
   const [hasBookings, setHasBookings] = useState<'any' | 'yes' | 'no'>('any');
-  const [govFilter, setGovFilter] = useState<'all' | 'normal' | 'analitik_danisman' | 'yz_arge'>('all');
+  const [govFilter, setGovFilter] = useState<'all' | 'normal' | 'analitik_danisman' | 'yz_arge' | 'izleyici'>('all');
   const [departments, setDepartments] = useState<string[]>([]);
   const [editing, setEditing] = useState<UserListItem | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<UserListItem | null>(null);
@@ -101,12 +101,35 @@ export default function AdminUsers() {
   const disabledCount = users.length - activeCount;
   const danismanCount = users.filter((u) => u.governanceRole === 'analitik_danisman').length;
   const argeCount = users.filter((u) => u.governanceRole === 'yz_arge').length;
+  const izleyiciCount = users.filter((u) => u.governanceRole === 'izleyici').length;
+  // 'Normal' = yönetişim rolü olmayanlar — izleyici'yi normal saymamak için
+  // çıkarma yerine doğrudan filtreyle sayılır ('normal' filtresiyle tutarlı).
+  const normalCount = users.filter((u) => !u.governanceRole).length;
 
   async function handleSave(input: AdminUserUpdatePayload) {
     if (!editing) return;
     setSaving(true);
     try {
-      await api.adminUpdateUser(editing.id, input);
+      // Yönetişim rolü değişimi özel uçtan gider (PUT /users/:id/governance-role):
+      // oturumları düşürür ve audit'e eski→yeni rol detayıyla yazılır.
+      const { governanceRole, ...rest } = input;
+      await api.adminUpdateUser(editing.id, rest);
+      if ((governanceRole ?? null) !== (editing.governanceRole ?? null)) {
+        try {
+          await api.adminSetGovernanceRole(editing.id, governanceRole ?? null);
+          toast.push('info', 'Yönetişim rolü güncellendi — kullanıcının açık oturumları kapatıldı.');
+        } catch (roleErr) {
+          // Profil KAYDEDİLDİ ama rol değişimi başarısız — kısmi durum kullanıcıya
+          // net söylenir ve liste tazelenir (aksi halde bayat görünürdü).
+          toast.push(
+            'error',
+            `Profil kaydedildi ancak yönetişim rolü güncellenemedi: ${(roleErr as Error).message || 'bilinmeyen hata'}`
+          );
+          setEditing(null);
+          await reload();
+          return;
+        }
+      }
       toast.push('success', 'Kullanıcı güncellendi.');
       setEditing(null);
       await reload();
@@ -232,7 +255,7 @@ export default function AdminUsers() {
               : 'bg-white text-kt-gray-700 border-kt-gray-200 hover:border-kt-gray-300'
           }`}
         >
-          Normal ({users.length - danismanCount - argeCount})
+          Normal ({normalCount})
         </button>
         <button
           type="button"
@@ -255,6 +278,17 @@ export default function AdminUsers() {
           }`}
         >
           ◆ YZ / Ar-Ge ({argeCount})
+        </button>
+        <button
+          type="button"
+          onClick={() => setGovFilter('izleyici')}
+          className={`px-3 py-1.5 rounded-lg font-semibold transition border ${
+            govFilter === 'izleyici'
+              ? 'bg-slate-600 text-white border-slate-600'
+              : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+          }`}
+        >
+          ◆ İzleyici ({izleyiciCount})
         </button>
       </div>
 
@@ -353,6 +387,11 @@ export default function AdminUsers() {
                         {u.governanceRole === 'yz_arge' && (
                           <span className="px-2 py-0.5 rounded-md bg-violet-100 text-violet-800 border border-violet-300 text-[10px] font-bold uppercase tracking-wider">
                             ◆ YZ / Ar-Ge
+                          </span>
+                        )}
+                        {u.governanceRole === 'izleyici' && (
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-300 text-[10px] font-bold uppercase tracking-wider">
+                            ◆ İzleyici
                           </span>
                         )}
                       </div>
@@ -741,6 +780,9 @@ function EditUserModal({ user, loading, onClose, onSave }: EditUserModalProps) {
               </select>
               <p className="text-[11px] text-kt-gray-500 mt-1">
                 Rol değişince kullanıcı bir sonraki girişte ilgili dashboard'a yönlendirilir.
+              </p>
+              <p className="text-[11px] text-amber-700 mt-0.5">
+                ⚠ Rol değişikliği kullanıcının açık oturumlarını sonlandırır — yeniden giriş yapması gerekir.
               </p>
             </div>
             <div>

@@ -42,6 +42,9 @@ export interface UserRecord {
   status: number;
   created_at: string;
   updated_at: string;
+  /** EK-1 beyanı onay zamanı — NULL ise onay kartı gösterilir (bir kereye mahsus). */
+  consent_accepted_at: string | null;
+  consent_version: string | null;
 }
 
 export interface AdminRecord {

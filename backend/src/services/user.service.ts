@@ -11,7 +11,7 @@ import { dbAll, dbOne, dbRun, dbTx } from '../db/schema';
 import { HttpError } from '../middleware/error.middleware';
 import type { AdminUserUpdateInput, ProfileUpdateInput } from '../validators/schemas';
 import { hashPassword, invalidateSubjectCache } from './auth.service';
-import { revokeAllForSubject } from './token.service';
+import { revokeAllForSubject, revokeAllForSubjectAllKinds } from './token.service';
 
 export type UserGovernanceRole = 'analitik_danisman' | 'yz_arge' | 'izleyici';
 
@@ -174,8 +174,8 @@ export async function listAllUsers(filters: UserSearchFilters = {}): Promise<Use
     whereParts.push(`(
       LOWER(users.full_name) LIKE ?
       OR LOWER(users.email) LIKE ?
-      OR LOWER(IFNULL(users.department, '')) LIKE ?
-      OR LOWER(IFNULL(users.title, '')) LIKE ?
+      OR LOWER(COALESCE(users.department, '')) LIKE ?
+      OR LOWER(COALESCE(users.title, '')) LIKE ?
     )`);
     params.push(like, like, like, like);
   }
@@ -264,7 +264,7 @@ export async function adminUpdateUser(id: string, input: AdminUserUpdateInput): 
     ['bio', 'bio'],
     ['projectIdea', 'project_idea'],
     ['status', 'status'],
-    ['governanceRole', 'governance_role'],
+    // governanceRole burada YOK — tek atama yolu setUserGovernanceRole (özel audit).
   ];
 
   for (const [k, col] of fieldMap) {
@@ -282,16 +282,49 @@ export async function adminUpdateUser(id: string, input: AdminUserUpdateInput): 
   params.push(id);
 
   await dbRun(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, [...params]);
-  // status≠1 (devre dışı) veya governance_role değişimi → aktif refresh token'ları
-  // iptal et: aksi halde devre dışı bırakılan / yetki rolü değişen kullanıcı, refresh
-  // ile (legacy uçlar dahil) oturum yenilemeye devam edebilirdi. (Soft-delete zaten
-  // adminDeleteUser'da revoke ediyor; bu, status=0 ve rol-değişimi durumunu kapatır.)
-  if ((input.status !== undefined && input.status !== 1) || input.governanceRole !== undefined) {
+  // status≠1 (devre dışı) → aktif refresh token'ları iptal et: aksi halde devre
+  // dışı bırakılan kullanıcı refresh ile oturum yenilemeye devam edebilirdi.
+  // (Soft-delete zaten adminDeleteUser'da revoke ediyor; rol değişimi ise artık
+  // yalnız setUserGovernanceRole yolundan geçer ve orada revoke edilir.)
+  if (input.status !== undefined && input.status !== 1) {
     await dbRun(`UPDATE refresh_tokens SET revoked = 1 WHERE subject_id = ?`, [id]);
   }
   // governance_role/status değişmiş olabilir — auth cache bayatlamasın.
   invalidateSubjectCache(id);
   return await getUserByIdAdmin(id);
+}
+
+/**
+ * Admin: kullanıcıya yönetişim rolü atar/kaldırır (null = normal kullanıcı).
+ * Yalnız users tablosunu günceller — admin hesaplarına DOKUNMAZ.
+ * Rol değişince eski kind'lı oturum/refresh anında geçersizleşsin diye auth
+ * cache düşürülür ve TÜM kind'lardaki refresh token'lar revoke edilir —
+ * kullanıcı yeniden login olur ve doğru panele düşer.
+ */
+export async function setUserGovernanceRole(
+  userId: string,
+  role: UserGovernanceRole | null
+): Promise<{ user: UserProfileDto; previousRole: UserGovernanceRole | null }> {
+  const existing = await dbOne(`SELECT id, governance_role, status FROM users WHERE id = ? LIMIT 1`, [userId]) as
+    | { id: string; governance_role: UserGovernanceRole | null; status: number }
+    | undefined;
+  if (!existing) throw new HttpError(404, 'Kullanıcı bulunamadı.', 'USER_NOT_FOUND');
+  // Devre dışı (soft-deleted) hesaba rol atanamaz — aksi halde restore anında
+  // kimse karar vermeden staff-okuma yetkisiyle geri dönerdi (komşu admin
+  // aksiyonları adminResetUserPassword/adminDeleteUser ile aynı politika).
+  if (existing.status === 3) {
+    throw new HttpError(409, 'Devre dışı kullanıcıya rol atanamaz. Önce hesabı geri yükleyin.', 'USER_DELETED');
+  }
+
+  const previousRole = existing.governance_role ?? null;
+  if (previousRole === role) {
+    return { user: await getUserByIdAdmin(userId), previousRole };
+  }
+
+  await dbRun(`UPDATE users SET governance_role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [role, userId]);
+  invalidateSubjectCache(userId);
+  await revokeAllForSubjectAllKinds(userId);
+  return { user: await getUserByIdAdmin(userId), previousRole };
 }
 
 /**

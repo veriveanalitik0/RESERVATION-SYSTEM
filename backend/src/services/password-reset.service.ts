@@ -20,6 +20,7 @@ import { nanoid } from 'nanoid';
 import { dbOne, dbRun, dbTx } from '../db/schema';
 import { HttpError } from '../middleware/error.middleware';
 import { logger } from '../utils/logger';
+import { sqlDateTimeLocal } from '../utils/dates';
 import { hashPassword } from './auth.service';
 import { revokeAllForSubject } from './token.service';
 
@@ -50,7 +51,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
      WHERE user_id = ? AND used_at IS NULL`, [user.id]);
 
   const rawToken = randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS).toISOString();
+  const expiresAt = sqlDateTimeLocal(new Date(Date.now() + RESET_TOKEN_TTL_MS));
   await dbRun(`INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at)
      VALUES (?, ?, ?, ?)`, [nanoid(), user.id, hashToken(rawToken), expiresAt]);
 
