@@ -79,6 +79,9 @@ services:
       USER_JWT_PUBLIC_KEY_PATH: ./keys/user_public.pem
       ADMIN_JWT_PRIVATE_KEY_PATH: ./keys/admin_private.pem
       ADMIN_JWT_PUBLIC_KEY_PATH: ./keys/admin_public.pem
+      # Görsel üretim özelliği — prod varsayılanı KAPALI (dış API bağımlılığı yok).
+      # Açmak için .env.prod'da FEATURE_VISUALS=true + sağlayıcı anahtarını doldurun.
+      FEATURE_VISUALS: ${FEATURE_VISUALS:-false}
       IMAGE_PROVIDER: ${IMAGE_PROVIDER:-huggingface}
       # Hugging Face ücretsiz token (huggingface.co/settings/tokens) — yalnız server-side.
       HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY:-}
@@ -88,15 +91,13 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       # Prometheus scrape erişimi (boşsa /api/metrics prod'da kapalı kalır).
       METRICS_TOKEN: ${METRICS_TOKEN:-}
-      # Embedding modeli cache'i node_modules yerine yazılabilir data volume'una.
-      MODEL_CACHE_DIR: /app/data/models
       # Observability (OpenTelemetry) — endpoint boşsa trace exporter kapalı.
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-klab-randevu}
     volumes:
       # JWT anahtarları — image'e gömülmez, salt-okunur mount (secret yönetimi).
       - ./backend/keys:/app/keys:ro
-      # Üretilen görseller + model cache kalıcı (node-yazılabilir data dizini).
+      # Üretilen görseller kalıcı (node-yazılabilir data dizini).
       - appdata:/app/data
     healthcheck:
       # Node 22 yerleşik fetch ile DB-bağımlı readiness probe (ek araç gerekmez).
@@ -121,8 +122,7 @@ services:
     deploy:
       resources:
         limits:
-          # In-process embedding modeli (transformers) bellek tüketir — host'taki
-          # postgres'i OOM'a sürüklemesin.
+          # Host'taki postgres'i OOM'a sürüklemesin.
           memory: 2g
     # Port DIŞA AÇILMAZ — nginx (frontend) /api'yi iç ağdan proxy'ler.
 
@@ -130,6 +130,9 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile.prod
+      args:
+        # Backend FEATURE_VISUALS ile senkron — kapalıyken görsel üretim UI'ı gizlenir.
+        VITE_FEATURE_VISUALS: ${FEATURE_VISUALS:-false}
     image: klab-frontend:prod
     container_name: klab-frontend-prod
     depends_on:

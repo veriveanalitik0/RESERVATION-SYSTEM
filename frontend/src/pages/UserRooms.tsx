@@ -144,17 +144,8 @@ export default function UserRooms() {
   async function submitBooking(payload: CreateBookingPayload) {
     setSubmitting(true);
     try {
-      const res = await api.createBooking(payload);
+      await api.createBooking(payload);
       toast.push('success', 'Talebiniz başarıyla alındı ve onay sürecine iletildi. Sonuçlandığında bilgilendirileceksiniz.');
-      // Otomatik duplicate-tespiti (#4): çok benzer mevcut proje varsa bilgilendir.
-      if (res.duplicateWarning) {
-        const d = res.duplicateWarning;
-        toast.push(
-          'info',
-          `Not: "${d.projectName}" projesine %${(d.similarity * 100).toFixed(0)} benziyor` +
-            (d.isOwn ? ' (sizin geçmiş projeniz).' : '.')
-        );
-      }
       setSelectedRoom(null);
       setBookAfterDate(null);
       await loadRooms();

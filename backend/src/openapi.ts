@@ -130,19 +130,6 @@ export const openApiDocument = {
           },
         },
       },
-      SimilarSearchResult: {
-        type: 'object',
-        properties: {
-          bookingId: { type: 'string' },
-          similarity: { type: 'number', minimum: 0, maximum: 1 },
-          projectName: { type: 'string' },
-          projectDescription: { type: 'string' },
-          technologies: { type: 'array', items: { type: 'string' } },
-          status: { type: 'string' },
-          roomCode: { type: 'string' },
-          userFullName: { type: 'string' },
-        },
-      },
     },
   },
   paths: {
@@ -241,18 +228,11 @@ export const openApiDocument = {
     '/user/waitlist/{id}': {
       delete: { security: [{ bearerAuth: [] }] },
     },
-    '/user/similar': {
-      post: {
-        security: [{ bearerAuth: [] }],
-        summary: 'Proje benzerlik araması (semantic)',
-      },
-    },
     '/admin/bookings': { get: { security: [{ bearerAuth: [] }] } },
     '/admin/bookings/{id}/review': { post: { security: [{ bearerAuth: [] }] } },
     '/admin/users': { get: { security: [{ bearerAuth: [] }] } },
     '/admin/analytics': { get: { security: [{ bearerAuth: [] }] } },
     '/admin/waitlist': { get: { security: [{ bearerAuth: [] }] } },
-    '/admin/similar': { post: { security: [{ bearerAuth: [] }] } },
     '/admin/mfa/enroll': { post: { security: [{ bearerAuth: [] }] } },
     '/admin/mfa/verify': { post: { security: [{ bearerAuth: [] }] } },
     '/admin/mfa/status': { get: { security: [{ bearerAuth: [] }] } },

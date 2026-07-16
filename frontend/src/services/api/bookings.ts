@@ -5,7 +5,6 @@
 import type {
   Booking,
   CreateBookingPayload,
-  DuplicateMatch,
   ReviewBookingPayload,
   StageEvent,
 } from '../../types';
@@ -34,15 +33,11 @@ export const bookingsApi = {
   },
 
   async createBooking(payload: CreateBookingPayload) {
-    // Yanıt: oluşturulan booking + (varsa) otomatik duplicate-tespiti uyarısı (#4).
-    return request<{ booking: Booking; duplicateWarning: DuplicateMatch | null }>(
-      '/user/bookings',
-      {
-        method: 'POST',
-        body: payload,
-        kind: 'user',
-      }
-    );
+    return request<{ booking: Booking }>('/user/bookings', {
+      method: 'POST',
+      body: payload,
+      kind: 'user',
+    });
   },
 
   async updateBooking(id: string, payload: CreateBookingPayload) {

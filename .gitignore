@@ -18,6 +18,8 @@ secrets.json
 backend/keys/*.pem
 backend/keys/*.key
 !backend/keys/.gitkeep
+# Arşivler — keys.zip / env.ts.zip gibi anahtar-konfig kopyaları yanlışlıkla commit'lenmesin
+*.zip
 
 # Database
 *.db

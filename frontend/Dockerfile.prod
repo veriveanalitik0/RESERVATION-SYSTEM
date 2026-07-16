@@ -11,6 +11,10 @@ RUN npm ci
 COPY frontend/ ./
 # Paylaşılan tip kaynağı (tsconfig include `../shared/index.d.ts` → /shared).
 COPY shared /shared
+# Feature flag'ler build-time'da gömülür (Vite). Prod varsayılanı: görsel üretim KAPALI
+# (dış API bağımlılığı yok). Açmak için: --build-arg VITE_FEATURE_VISUALS=true.
+ARG VITE_FEATURE_VISUALS=false
+ENV VITE_FEATURE_VISUALS=$VITE_FEATURE_VISUALS
 RUN npm run build
 
 # ---- Stage 2: runtime — nginx (statik + API proxy) ----

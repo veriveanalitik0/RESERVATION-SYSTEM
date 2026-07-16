@@ -3,6 +3,8 @@
  * /chat/background. user.routes.ts composer'ı tarafından bağlanır.
  */
 import { Router, type Request, type Response, type NextFunction } from 'express';
+import { config } from '../../config/env';
+import { HttpError } from '../../middleware/error.middleware';
 import { expensiveActionRateLimit } from '../../middleware/security.middleware';
 import {
   createVisualSchema,
@@ -18,6 +20,19 @@ import {
 import { readId } from '../../utils/route-helpers';
 
 const router = Router();
+
+// FEATURE FLAG (FEATURE_VISUALS): kapalıyken tüm görsel üretim yüzeyi 503 döner
+// → dış görsel/çeviri API'lerine (HF/Pollinations/Gemini) hiçbir istek çıkmaz.
+router.use('/visuals', visualsFeatureGuard);
+router.use('/chat/background', visualsFeatureGuard);
+
+function visualsFeatureGuard(_req: Request, _res: Response, next: NextFunction): void {
+  if (!config.visualsEnabled) {
+    next(new HttpError(503, 'Görsel üretim özelliği bu ortamda kapalı.', 'FEATURE_DISABLED'));
+    return;
+  }
+  next();
+}
 
 /* ============================================================
  * GÖRSEL ÜRETİMİ — kullanıcı (gorsel_uretim entegrasyonu)

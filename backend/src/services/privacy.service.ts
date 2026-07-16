@@ -16,8 +16,7 @@
  *    5) Bookings: status='approved' olanlar tarih bütünlüğü için kalır,
  *       diğerleri silinir; kalanların project_description'ında PII varsa scrub.
  *       (Audit için booking history korunur — anonymized.)
- *    6) project_embeddings → silinir (tekrar hesaplanabilir, geçmişi tutmaya gerek yok).
- *    7) audit_logs → değişmez (compliance/forensic; retention süresi
+ *    6) audit_logs → değişmez (compliance/forensic; retention süresi
  *       data_security §11 ile yönetilir).
  *
  * Audit:
@@ -113,7 +112,6 @@ export interface PurgeResult {
   pseudonymizedBookings: number;
   cancelledWaitlist: number;
   revokedTokens: number;
-  deletedEmbeddings: number;
   deletedChatMessages: number;
   deletedComments: number;
   deletedLikes: number;
@@ -131,12 +129,7 @@ export async function purgeUser(userId: string, requestedBy: { id: string; type:
     const existing = await dbOne(`SELECT id, status FROM users WHERE id = ? LIMIT 1`, [userId]) as { id: string; status: number } | undefined;
     if (!existing) throw new HttpError(404, 'Kullanıcı bulunamadı.', 'USER_NOT_FOUND');
 
-    // 1) Pending/feedback bookings → silinir + embedding sil
-    const deletable = await dbAll(`SELECT id FROM bookings
-         WHERE user_id = ? AND status IN ('pending', 'feedback_requested')`, [userId]) as Array<{ id: string }>;
-    for (const b of deletable) {
-      await dbRun('DELETE FROM project_embeddings WHERE booking_id = ?', [b.id]);
-    }
+    // 1) Pending/feedback bookings → silinir
     const delRes = await dbRun(`DELETE FROM bookings WHERE user_id = ?
          AND status IN ('pending', 'feedback_requested')`, [userId]);
 
@@ -147,10 +140,6 @@ export async function purgeUser(userId: string, requestedBy: { id: string; type:
              showcase_image_url = NULL,
              updated_at = CURRENT_TIMESTAMP
          WHERE user_id = ? AND status IN ('approved', 'rejected')`, [userId]);
-
-    // Approved bookings'in embedding'lerini de sil (re-index gerekirse)
-    await dbRun(`DELETE FROM project_embeddings
-       WHERE booking_id IN (SELECT id FROM bookings WHERE user_id = ?)`, [userId]);
 
     // 3) Waitlist → cancelled
     const waitlistRes = await dbRun(`UPDATE waitlist
@@ -235,7 +224,6 @@ export async function purgeUser(userId: string, requestedBy: { id: string; type:
       pseudonymizedBookings: pseudonymizeRes.changes,
       cancelledWaitlist: waitlistRes.changes,
       revokedTokens: tokensRes.changes,
-      deletedEmbeddings: deletable.length, // approximate count
       deletedChatMessages: chatRes.changes,
       deletedComments: commentsRes.changes,
       deletedLikes: likesRes.changes,

@@ -314,42 +314,6 @@ export const joinWaitlistSchema = z.object({
 export type JoinWaitlistInput = z.infer<typeof joinWaitlistSchema>;
 
 /* ============================================================
- * Semantic search
- * ============================================================ */
-
-export const similarSearchSchema = z.object({
-  // Önceden oluşturulmuş booking'in benzerlerini getirmek için
-  bookingId: z.string().min(8).max(40).optional(),
-  // Veya serbest metin (yeni booking formu önizleme)
-  projectName: z.string().trim().min(3).max(120).optional(),
-  projectDescription: z.string().trim().min(10).max(2000).optional(),
-  technologies: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
-  limit: z.number().int().min(1).max(20).optional(),
-  minSimilarity: z.number().min(0).max(1).optional(),
-}).refine(
-  (v) =>
-    !!v.bookingId ||
-    (!!v.projectName && !!v.projectDescription) ||
-    (!!v.projectDescription && !!v.technologies && v.technologies.length > 0),
-  {
-    message:
-      "Ya `bookingId` ya da en az `projectName`+`projectDescription` ya da `projectDescription`+`technologies` gönderilmeli.",
-    path: ['bookingId'],
-  }
-);
-
-export type SimilarSearchInput = z.infer<typeof similarSearchSchema>;
-
-/** İş birliği önerisi — kullanıcının kendi booking'i referans alınır (IDOR korumalı). */
-export const collaborationSchema = z.object({
-  bookingId: z.string().min(8).max(40),
-  limit: z.number().int().min(1).max(20).optional(),
-  minSimilarity: z.number().min(0).max(1).optional(),
-});
-
-export type CollaborationInput = z.infer<typeof collaborationSchema>;
-
-/* ============================================================
  * Admin user search
  * ============================================================ */
 

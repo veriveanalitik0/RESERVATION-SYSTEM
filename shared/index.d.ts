@@ -58,35 +58,6 @@ export interface ShowcaseTechnology {
   count: number;
 }
 
-/* ============ Semantic search / eşleştirme (#4) ============ */
-
-export interface SimilarBooking {
-  bookingId: string;
-  similarity: number;
-  projectName: string;
-  projectDescription: string;
-  technologies: string[];
-  status: string;
-  roomCode: string;
-  roomName: string;
-  userFullName: string;
-  /** İfşa edilen sonuçlarda sahip user id'si — "Bağlan" (/u/:id) için. Anonimde yok. */
-  authorId?: string;
-  isOwn?: boolean;
-  anonymized?: boolean;
-  createdAt: string;
-}
-
-/** Yeni booking'de otomatik duplicate-tespiti sonucu. */
-export interface DuplicateMatch {
-  bookingId: string;
-  projectName: string;
-  similarity: number;
-  isOwn: boolean;
-  authorFullName: string;
-  roomCode: string;
-}
-
 /* ============ Leaderboard / Sıralama (#5a) ============ */
 
 export interface LeaderboardUser {

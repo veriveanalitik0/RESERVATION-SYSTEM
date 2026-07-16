@@ -13,7 +13,6 @@ import { initSchema, closeDb } from './db/schema';
 import { logger } from './utils/logger';
 import { closeAllSse } from './services/sse.service';
 import { startWaitlistMaintenance } from './services/waitlist.service';
-import { warmupEmbeddings, backfillEmbeddings } from './services/embedding.service';
 import { warmupTranslation } from './services/image-gen.service';
 import { startMaintenance } from './services/maintenance.service';
 import { startBackupCron } from './services/backup.service';
@@ -27,24 +26,10 @@ async function start(): Promise<void> {
     console.log(`[KLAB] Uygulanan migrationlar: ${migrationResult.applied.join(', ')}`);
   }
 
-  // Embedding modeli arka planda warm-up, ardından eksik booking embedding'lerini
-  // backfill et (idempotent — yalnız embedding'i olmayanları işler). Böylece benzer
-  // proje / iş birliği / duplicate-tespiti (#4) re-seed sonrası kutudan çıktığı gibi
-  // çalışır; manuel admin backfill gerekmez. Non-blocking.
-  void warmupEmbeddings()
-    .then(() => backfillEmbeddings())
-    .then((r) => {
-      if (r.processed > 0) {
-        logger.info('embedding_backfill_done', { processed: r.processed, skipped: r.skipped });
-      }
-    })
-    .catch((err) =>
-      logger.warn('embedding_warmup_or_backfill_failed', { err: (err as Error).message })
-    );
-
   // Görsel prompt çeviri modelini (HF opus-mt-tr-en) arka planda ısıt — ilk
   // görsel üretiminde soğuk-başlangıç çevirisi zaman aşımına düşmesin. Non-blocking.
-  void warmupTranslation();
+  // FEATURE_VISUALS=false → özellik kapalı, dış API'ye warm-up isteği de atılmaz.
+  if (config.visualsEnabled) void warmupTranslation();
 
   // Waitlist promotion cron (yarım dakika periyot)
   startWaitlistMaintenance();

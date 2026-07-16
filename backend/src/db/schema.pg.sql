@@ -106,14 +106,6 @@ CREATE TABLE IF NOT EXISTS waitlist (
           updated_at TEXT NOT NULL DEFAULT to_char(now(), 'YYYY-MM-DD HH24:MI:SS')
         );
 
-CREATE TABLE IF NOT EXISTS project_embeddings (
-          booking_id TEXT PRIMARY KEY,
-          embedding TEXT NOT NULL,
-          model TEXT NOT NULL,
-          dim INTEGER NOT NULL,
-          created_at TEXT NOT NULL DEFAULT to_char(now(), 'YYYY-MM-DD HH24:MI:SS')
-        );
-
 CREATE TABLE IF NOT EXISTS showcase_likes (
           id TEXT PRIMARY KEY,
           booking_id TEXT NOT NULL,
@@ -414,10 +406,6 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   ALTER TABLE waitlist ADD CONSTRAINT fk_waitlist_3 FOREIGN KEY (promoted_booking_id) REFERENCES bookings(id) ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  ALTER TABLE project_embeddings ADD CONSTRAINT fk_project_embeddings_4 FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE;
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN

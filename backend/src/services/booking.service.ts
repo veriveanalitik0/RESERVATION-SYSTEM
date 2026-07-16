@@ -10,11 +10,6 @@ import { nanoid } from 'nanoid';
 import { dbAll, dbOne, dbRun, dbTx } from '../db/schema';
 import { HttpError } from '../middleware/error.middleware';
 import type { CreateBookingInput, ReviewBookingInput } from '../validators/schemas';
-import {
-  bookingTextForEmbedding,
-  deleteBookingEmbedding,
-  saveBookingEmbedding,
-} from './embedding.service';
 import { broadcastBooking, broadcastToAdmins } from './sse.service';
 import { recordAudit } from './audit.service';
 import { recordStageEvent } from './governance.service';
@@ -223,16 +218,6 @@ export async function createBooking(userId: string, input: CreateBookingInput): 
   });
   const created = await getBookingByIdForUser(userId, bookingId) as BookingDto;
 
-  // Embedding hesapla (fire-and-forget — response'u bekletme)
-  const embText = bookingTextForEmbedding({
-    projectName: created.projectName,
-    projectDescription: created.projectDescription,
-    technologies: created.technologies,
-  });
-  saveBookingEmbedding(bookingId, embText).catch((err) =>
-    logger.warn('embedding_create_failed', { bookingId, err: (err as Error).message })
-  );
-
   // SSE event
   broadcastBooking(
     { type: 'booking.created', data: { bookingId, status: created.status } },
@@ -351,16 +336,6 @@ export async function updateBooking(
   });
   const updated = await getBookingByIdForUser(userId, bookingId) as BookingDto;
 
-  // Embedding güncelle
-  const embText = bookingTextForEmbedding({
-    projectName: updated.projectName,
-    projectDescription: updated.projectDescription,
-    technologies: updated.technologies,
-  });
-  saveBookingEmbedding(bookingId, embText).catch((err) =>
-    logger.warn('embedding_update_failed', { bookingId, err: (err as Error).message })
-  );
-
   broadcastBooking(
     { type: 'booking.updated', data: { bookingId, status: updated.status } },
     userId
@@ -410,13 +385,12 @@ export async function deleteBooking(userId: string, bookingId: string): Promise<
       );
     }
 
-    // Komple silme: FK cascade'ler randevu/embedding/beğeni/yorumları temizler;
+    // Komple silme: FK cascade'ler randevu/beğeni/yorumları temizler;
     // stage olayları FK'sız — elle temizlenir (yetim satır kalmasın).
     await dbRun('DELETE FROM project_stage_events WHERE request_id = ?', [bookingId]);
     await dbRun('DELETE FROM bookings WHERE id = ?', [bookingId]);
     return existing.room_id;
   });
-  await deleteBookingEmbedding(bookingId);
 
   broadcastBooking({ type: 'booking.withdrawn', data: { bookingId } }, userId);
   broadcastToAdmins({ type: 'booking.withdrawn', data: { bookingId, roomId } });
@@ -908,7 +882,6 @@ export async function adminDeleteBooking(
     await dbRun('DELETE FROM bookings WHERE id = ?', [bookingId]);
     return existing;
   });
-  await deleteBookingEmbedding(bookingId);
 
   recordAudit({
     eventType: 'booking.admin_deleted',

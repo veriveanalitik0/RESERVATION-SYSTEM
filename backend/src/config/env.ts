@@ -83,6 +83,15 @@ export interface AppConfig {
    * AÇIK: gün-bazlı (weekday_mask) kısmi müsaitlik.
    */
   weekdaySelection: boolean;
+
+  /**
+   * Görsel üretim özelliği (FEATURE_VISUALS). Varsayılan AÇIK; 'false' verilirse
+   * /user/visuals uçları 503 döner ve çeviri modeli warm-up'ı atlanır → backend
+   * hiçbir dış görsel/çeviri API'sine (Hugging Face / Pollinations / Gemini)
+   * istek atmaz. Prod'da dış bağımlılık istenmediğinde kapatın
+   * (docker-compose.prod.yml varsayılanı: kapalı).
+   */
+  visualsEnabled: boolean;
 }
 
 function loadConfig(): AppConfig {
@@ -139,6 +148,8 @@ function loadConfig(): AppConfig {
     logLevel: process.env.LOG_LEVEL ?? 'info',
 
     weekdaySelection: process.env.FEATURE_WEEKDAY_SELECTION === 'true',
+
+    visualsEnabled: process.env.FEATURE_VISUALS !== 'false',
   };
 }
 

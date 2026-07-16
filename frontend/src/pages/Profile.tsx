@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
 import { ProfilePhotoUpload } from '../components/ProfilePhotoUpload';
 import { VisualStudio } from '../components/VisualStudio';
+import { FEATURES } from '../constants/features';
 import { useToast } from '../components/Toast';
 import { api } from '../services/api';
 import type { ProfileUpdatePayload, UserProfile, Visual } from '../types';
@@ -19,7 +20,9 @@ export default function Profile() {
   // Aktif sekme URL query'den okunur: ?tab=gorsel → Görsel Üret, aksi halde Profil.
   // Eski /gorsel linkleri App.tsx'te /profile?tab=gorsel'e yönlendirilir.
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab: ProfileTab = searchParams.get('tab') === 'gorsel' ? 'gorsel' : 'profil';
+  // FEATURE_VISUALS kapalıyken 'gorsel' sekmesi yok — eski ?tab=gorsel linkleri profile düşer.
+  const activeTab: ProfileTab =
+    FEATURES.visualStudio && searchParams.get('tab') === 'gorsel' ? 'gorsel' : 'profil';
 
   function switchTab(tab: ProfileTab) {
     const next = new URLSearchParams(searchParams);
@@ -157,15 +160,17 @@ export default function Profile() {
         >
           👤 Profilim
         </button>
-        <button
-          type="button"
-          onClick={() => switchTab('gorsel')}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition ${
-            activeTab === 'gorsel' ? 'bg-kt-green-700 text-white' : 'text-kt-gray-600 hover:text-kt-green-800'
-          }`}
-        >
-          🎨 Görsel Üret
-        </button>
+        {FEATURES.visualStudio && (
+          <button
+            type="button"
+            onClick={() => switchTab('gorsel')}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition ${
+              activeTab === 'gorsel' ? 'bg-kt-green-700 text-white' : 'text-kt-gray-600 hover:text-kt-green-800'
+            }`}
+          >
+            🎨 Görsel Üret
+          </button>
+        )}
       </div>
 
       {activeTab === 'gorsel' ? (
@@ -381,6 +386,8 @@ export default function Profile() {
               </div>
             </fieldset>
 
+            {/* FEATURE_VISUALS kapalıyken üretilmiş görsel de yok — bölüm gizlenir. */}
+            {FEATURES.visualStudio && (
             <fieldset className="space-y-3">
               <div className="text-xs font-bold uppercase tracking-wider text-kt-gold-700">Profil Arka Planı</div>
               <p className="text-sm text-kt-gray-500 -mt-1">
@@ -411,6 +418,7 @@ export default function Profile() {
                 </div>
               </div>
             </fieldset>
+            )}
 
             <div className="flex items-center justify-between pt-4 border-t border-kt-gray-100">
               <p className="text-xs text-kt-gray-400">

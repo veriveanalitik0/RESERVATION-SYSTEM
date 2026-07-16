@@ -17,8 +17,6 @@ import type {
   VisualVariant,
   ShowcaseItem,
   ShowcaseTechnology,
-  SimilarBooking,
-  DuplicateMatch,
   Leaderboard,
   LeaderboardUser,
   LeaderboardProject,
@@ -44,8 +42,6 @@ export type {
   VisualVariant,
   ShowcaseItem,
   ShowcaseTechnology,
-  SimilarBooking,
-  DuplicateMatch,
   Leaderboard,
   LeaderboardUser,
   LeaderboardProject,
@@ -392,8 +388,6 @@ export interface LicenseReport {
     freeLicenseCount: number;
   };
 }
-
-// SimilarBooking + DuplicateMatch → @klab/shared (üstte re-export edildi).
 
 /* ============================================================
  * GENEL SOHBET (rol-bağımsız chat)

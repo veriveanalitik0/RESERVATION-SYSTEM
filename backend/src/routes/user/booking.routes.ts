@@ -27,10 +27,6 @@ import {
   joinWaitlist,
   listUserWaitlist,
 } from '../../services/waitlist.service';
-import {
-  bookingTextForEmbedding,
-  detectDuplicate,
-} from '../../services/embedding.service';
 import { setBookingShowcaseImage } from '../../services/visual.service';
 import { recordAudit } from '../../services/audit.service';
 import { HttpError } from '../../middleware/error.middleware';
@@ -66,25 +62,7 @@ router.post('/bookings', async (req: Request, res: Response, next: NextFunction)
       },
     });
 
-    // Otomatik duplicate-tespiti (#4) — best-effort, booking ZATEN oluştu (bloklamaz).
-    // Çok benzer mevcut bir proje varsa kullanıcıya uyarı amaçlı döndürülür.
-    let duplicateWarning = null;
-    try {
-      const embText = bookingTextForEmbedding({
-        projectName: booking.projectName,
-        projectDescription: booking.projectDescription,
-        technologies: booking.technologies,
-      });
-      duplicateWarning = await detectDuplicate({
-        queryText: embText,
-        excludeBookingId: booking.id,
-        userId: req.auth!.subjectId,
-      });
-    } catch {
-      /* tespit best-effort — booking yine de döndürülür */
-    }
-
-    res.status(201).json({ booking, duplicateWarning });
+    res.status(201).json({ booking });
   } catch (err) {
     next(err);
   }

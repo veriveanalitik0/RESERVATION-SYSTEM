@@ -33,7 +33,7 @@ router.use(csrfProtection);
 router.use(profileRoutes); // /profile, /me
 router.use(roomRoutes); // /rooms
 router.use(bookingRoutes); // /bookings, /waitlist
-router.use(discoveryRoutes); // /similar, /collaborations, /leaderboard
+router.use(discoveryRoutes); // /leaderboard
 router.use(showcaseRoutes); // /showcase
 router.use(licenseRoutes); // /licenses
 router.use(notificationRoutes); // /notifications

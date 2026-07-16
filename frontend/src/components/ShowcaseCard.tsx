@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { FEATURES } from '../constants/features';
 import { useViewerKind } from '../hooks/useViewerKind';
 import { useToast } from './Toast';
 import { api } from '../services/api';
@@ -220,7 +221,8 @@ export function ShowcaseCard({ item, authorId, likes, comments }: Props) {
           {item.roomCode} · {item.neighborhood}
         </span>
         <div className="flex items-center gap-1.5 shrink-0">
-          {isOwner && (
+          {/* Arkaplan seçici üretilmiş görselleri listeler → FEATURE_VISUALS kapalıyken gizli. */}
+          {isOwner && FEATURES.visualStudio && (
             <button
               onClick={openBackgroundPicker}
               className="px-2 py-0.5 rounded-md bg-kt-violet-100 text-kt-violet-800 text-[10px] font-bold border border-kt-violet-200 hover:bg-kt-violet-200 transition-colors"

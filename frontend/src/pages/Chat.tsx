@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
+import { FEATURES } from '../constants/features';
 import { useToast } from '../components/Toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeEvents } from '../hooks/useRealtimeEvents';
@@ -242,7 +243,8 @@ export default function Chat() {
             )}
           </p>
         </div>
-        {kind === 'user' && (
+        {/* Tema seçici üretilmiş görselleri listeler → FEATURE_VISUALS kapalıyken gizli. */}
+        {kind === 'user' && FEATURES.visualStudio && (
           <button type="button" onClick={openThemePicker} className="btn-secondary text-sm shrink-0">
             🎨 Sohbet teması
           </button>

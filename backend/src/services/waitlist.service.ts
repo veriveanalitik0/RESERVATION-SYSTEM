@@ -24,10 +24,6 @@ import { HttpError } from '../middleware/error.middleware';
 import { logger } from '../utils/logger';
 import { recordAudit } from '../services/audit.service';
 import { broadcastBooking, broadcastToAdmins, broadcastToUser } from './sse.service';
-import {
-  bookingTextForEmbedding,
-  saveBookingEmbedding,
-} from './embedding.service';
 import { maskToWeekdays, weekdaysToMask } from '../utils/weekdays';
 import type { WaitlistEntry as SharedWaitlistEntry } from '@klab/shared';
 import { addMonthsEndDate, periodEndDate } from '../utils/dates';
@@ -493,21 +489,6 @@ export async function tryPromoteForRoom(roomId: string): Promise<string[]> {
 
     if (newBookingId) {
       promotedIds.push(entry.id);
-
-      // Embedding hesapla (semantic search için)
-      try {
-        const text = bookingTextForEmbedding({
-          projectName: entry.project_name,
-          projectDescription: entry.project_description,
-          technologies: entry.technologies,
-        });
-        await saveBookingEmbedding(newBookingId, text);
-      } catch (err) {
-        logger.warn('waitlist_promote_embedding_failed', {
-          bookingId: newBookingId,
-          err: (err as Error).message,
-        });
-      }
 
       recordAudit({
         eventType: 'waitlist.promoted',

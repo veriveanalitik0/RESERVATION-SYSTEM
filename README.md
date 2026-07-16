@@ -167,7 +167,7 @@ Kütüphane:
   (`/kutuphane` ve `/admin/kutuphane` sayfaları)
 
 Etkileşim & sistem:
-- `showcase_likes`, `showcase_comments` · `notifications` · `project_embeddings` (benzerlik) · `visuals` (üretilen görseller)
+- `showcase_likes`, `showcase_comments` · `notifications` · `visuals` (üretilen görseller — `FEATURE_VISUALS` flag'i ile açılıp kapanır)
 - `password_reset_tokens` · `schema_migrations` — versiyonlu migration kaydı (bkz. `backend/src/db/migrations/`)
 
 ## Lisans
