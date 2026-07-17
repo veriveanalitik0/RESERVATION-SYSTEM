@@ -2,7 +2,7 @@
  * E2E: auth + landing + login + register
  */
 import { test, expect } from '@playwright/test';
-import { acceptConsentIfShown } from './helpers';
+import { registerAndLogin } from './helpers';
 
 test.describe('Landing & Auth', () => {
   test('landing açılır ve giriş kartı görünür', async ({ page }) => {
@@ -11,24 +11,11 @@ test.describe('Landing & Auth', () => {
     await expect(page.getByRole('link', { name: /Giriş Yap/i }).first()).toBeVisible();
   });
 
-  test('user login → /rooms', async ({ page }) => {
-    await page.goto('/login');
-    await page.waitForSelector('input[type="email"]', { timeout: 10_000 });
-    await page.locator('input[type="email"]').fill('user@klab.test');
-    await page.locator('input[type="password"]').fill('Demo1234!Pass');
-    // Submit & wait for network
-    const [resp] = await Promise.all([
-      page.waitForResponse((r) => r.url().includes('/api/auth/login') && r.status() === 200, {
-        timeout: 15_000,
-      }),
-      page.locator('button[type="submit"]').click(),
-    ]);
-    expect(resp.status()).toBe(200);
-    // İlk girişte EK-1 beyan kartı çıkabilir (bir kereye mahsus) — onayla.
-    await acceptConsentIfShown(page);
-    // Login sonrası: aktif booking'i olan kullanıcı /dashboard'a, yoksa /rooms'a
-    // yönlenir (Login.tsx redirectAfterLogin). İkisi de geçerli kimlikli giriştir.
-    await page.waitForURL(/\/(rooms|dashboard)/, { timeout: 15_000 });
+  test('user kayıt + otomatik giriş → /rooms', async ({ page }) => {
+    // Temiz (prod-benzeri) DB'de seed'li demo kullanıcı yok. Kayıt akışı backend'de
+    // otomatik login yapar; EK-1 beyanı onaylanınca /rooms'a (veya /dashboard'a)
+    // yönlenir — kimlikli oturumun uçtan uca kurulduğunu doğrular.
+    await registerAndLogin(page);
   });
 
   test('admin login → /admin', async ({ page }) => {
@@ -47,9 +34,11 @@ test.describe('Landing & Auth', () => {
   });
 
   test('hatalı parola → AUTH_FAILED hatası', async ({ page }) => {
+    // Temiz DB'de bu e-posta kayıtlı olmasa bile backend GENERIC 401 döner
+    // (kullanıcı varlığını ifşa etmez) → test hesabın var/yok olmasından bağımsız geçer.
     await page.goto('/login');
     await page.waitForSelector('input[type="email"]', { timeout: 10_000 });
-    await page.locator('input[type="email"]').fill('user@klab.test');
+    await page.locator('input[type="email"]').fill('yok.kullanici@klab.test');
     await page.locator('input[type="password"]').fill('WrongPassword!1');
     await page.locator('button[type="submit"]').click();
     // Backend dönmesini bekle

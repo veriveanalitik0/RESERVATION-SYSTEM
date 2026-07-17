@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, ShieldCheck, Home, BrainCircuit, FlaskConical, UserRound, CircleUserRound, UserRoundCheck } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 
 interface LoginFormProps {
   email: string;
@@ -11,8 +11,6 @@ interface LoginFormProps {
   onPasswordChange: (v: string) => void;
   onRememberChange: (v: boolean) => void;
   onSubmit: (e: React.FormEvent) => void;
-  onDemoFill?: (which: 'user' | 'admin' | 'danisman' | 'arge' | 'izleyici' | 'ayberk' | 'furkan' | 'fatih') => void;
-  onHomeClick?: () => void;
   registerHref?: string;
   forgotHref?: string;
 }
@@ -35,13 +33,6 @@ interface FormInputProps {
   maxLength?: number;
   disabled?: boolean;
   required?: boolean;
-}
-
-interface QuickButtonProps {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  title?: string;
 }
 
 interface ToggleSwitchProps {
@@ -70,20 +61,6 @@ const FormInput: React.FC<FormInputProps> = ({ icon, type, id, label, placeholde
         className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-kt-gold-400/60 focus:ring-2 focus:ring-kt-gold-400/20 transition-colors disabled:opacity-60"
       />
     </div>
-  );
-};
-
-const QuickButton: React.FC<QuickButtonProps> = ({ icon, label, onClick, title }) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className="flex flex-col items-center justify-center gap-1 py-2 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:bg-white/10 hover:text-kt-gold-300 hover:border-kt-gold-400/40 transition-colors"
-    >
-      {icon}
-      <span className="text-[10px] font-semibold uppercase tracking-wider">{label}</span>
-    </button>
   );
 };
 
@@ -144,8 +121,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
   onPasswordChange,
   onRememberChange,
   onSubmit,
-  onDemoFill,
-  onHomeClick,
   registerHref = '/register',
   forgotHref = '#',
 }) => {
@@ -235,92 +210,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
             </span>
           </button>
         </form>
-
-        {(onDemoFill || onHomeClick) && (
-          <div className="mt-8">
-            <div className="relative flex items-center justify-center">
-              <div className="border-t border-white/10 absolute w-full" />
-              <div className="bg-transparent px-4 relative text-white/50 text-[11px] uppercase tracking-[0.2em]">
-                hızlı erişim
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              {onDemoFill && (
-                <QuickButton
-                  icon={<User size={18} />}
-                  label="Kullanıcı"
-                  title="Demo kullanıcı bilgilerini doldur"
-                  onClick={() => onDemoFill('user')}
-                />
-              )}
-              {onDemoFill && (
-                <QuickButton
-                  icon={<ShieldCheck size={18} />}
-                  label="Admin"
-                  title="Demo Lab Mühendisi (admin) bilgilerini doldur"
-                  onClick={() => onDemoFill('admin')}
-                />
-              )}
-              {onDemoFill && (
-                <QuickButton
-                  icon={<BrainCircuit size={18} />}
-                  label="Danışman"
-                  title="Analitik Danışman demo hesabını doldur (Ayşe Yılmaz)"
-                  onClick={() => onDemoFill('danisman')}
-                />
-              )}
-              {onDemoFill && (
-                <QuickButton
-                  icon={<FlaskConical size={18} />}
-                  label="Ar-Ge"
-                  title="YZ / Ar-Ge Mühendisi demo hesabını doldur (Burak Şahin)"
-                  onClick={() => onDemoFill('arge')}
-                />
-              )}
-              {onDemoFill && (
-                <QuickButton
-                  icon={<Eye size={18} />}
-                  label="İzleyici"
-                  title="İzleyici (salt-okunur) demo hesabını doldur (Gözlem Yetkilisi)"
-                  onClick={() => onDemoFill('izleyici')}
-                />
-              )}
-              {onDemoFill && (
-                <QuickButton
-                  icon={<UserRound size={18} />}
-                  label="Ayberk"
-                  title="Ayberk Burak Yardımcı hesabını doldur"
-                  onClick={() => onDemoFill('ayberk')}
-                />
-              )}
-              {onDemoFill && (
-                <QuickButton
-                  icon={<CircleUserRound size={18} />}
-                  label="Furkan"
-                  title="Furkan Koçal hesabını doldur"
-                  onClick={() => onDemoFill('furkan')}
-                />
-              )}
-              {onDemoFill && (
-                <QuickButton
-                  icon={<UserRoundCheck size={18} />}
-                  label="Fatih"
-                  title="Fatih Baday hesabını doldur"
-                  onClick={() => onDemoFill('fatih')}
-                />
-              )}
-              {onHomeClick && (
-                <QuickButton
-                  icon={<Home size={18} />}
-                  label="Ana sayfa"
-                  title="Ana sayfaya dön"
-                  onClick={onHomeClick}
-                />
-              )}
-            </div>
-          </div>
-        )}
 
         <p className="mt-8 text-center text-sm text-white/60">
           Hesabın yok mu?{' '}

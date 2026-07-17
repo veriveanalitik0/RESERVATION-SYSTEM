@@ -158,37 +158,6 @@ export default function Login() {
     }
   }
 
-  function fillDemo(which: 'user' | 'admin' | 'danisman' | 'arge' | 'izleyici' | 'ayberk' | 'furkan' | 'fatih') {
-    if (which === 'user') {
-      setEmail('user@klab.test');
-      setPassword('Demo1234!Pass');
-    } else if (which === 'admin') {
-      setEmail('admin@klab.test');
-      setPassword('Admin1234!Pass');
-    } else if (which === 'danisman') {
-      // Ayşe Yılmaz — governance_role: analitik_danisman (seed)
-      setEmail('ayse.yilmaz@klab.test');
-      setPassword('Ayse1234!Pass');
-    } else if (which === 'izleyici') {
-      // Gözlem Yetkilisi — governance_role: izleyici (seed, salt-okunur)
-      setEmail('izleyici@klab.test');
-      setPassword('Izleyici1234!');
-    } else if (which === 'ayberk') {
-      setEmail('ayberk.yardimci@klab.test');
-      setPassword('Ayberk1234!Pass');
-    } else if (which === 'furkan') {
-      setEmail('furkan.kocal@klab.test');
-      setPassword('Furkan1234!Pass');
-    } else if (which === 'fatih') {
-      setEmail('fatih.baday@klab.test');
-      setPassword('Fatih1234!Pass');
-    } else {
-      // Burak Şahin — governance_role: yz_arge (seed)
-      setEmail('burak.sahin@klab.test');
-      setPassword('Burak1234!Pass');
-    }
-  }
-
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center px-4 py-12 overflow-hidden bg-kt-green-950">
       {/* Arkaplan (Landing hero ile aynı) + üst header — ortak auth bileşenleri */}
@@ -257,8 +226,6 @@ export default function Login() {
             onPasswordChange={setPassword}
             onRememberChange={setRemember}
             onSubmit={handleSubmit}
-            onDemoFill={fillDemo}
-            onHomeClick={() => navigate('/')}
             registerHref="/register"
             forgotHref="/forgot-password"
           />

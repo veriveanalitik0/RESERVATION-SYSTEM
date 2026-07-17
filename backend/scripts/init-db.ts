@@ -18,9 +18,9 @@ async function main(): Promise<void> {
   await runSeed();
   console.log('\n[DB] Hazır.');
 
-  console.log('\n--- DEMO CREDENTIAL ---');
-  console.log('User : user@klab.test / Demo1234!Pass');
+  console.log('\n--- BOOTSTRAP ADMIN (ilk girişten sonra parolayı DEĞİŞTİRİN) ---');
   console.log('Admin: admin@klab.test / Admin1234!Pass');
+  console.log('Not: Arge/danışman/izleyici rolleri admin panelinden atanır.');
 
   await closeDb();
 }

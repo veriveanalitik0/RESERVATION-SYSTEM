@@ -8,22 +8,11 @@
  *  7. Görsel Üret → Profil sekmesi (/gorsel yönlendirmesi dahil)
  */
 import { test, expect, type Page } from '@playwright/test';
-import { acceptConsentIfShown } from './helpers';
+import { registerAndLogin } from './helpers';
 
 async function loginUser(page: Page): Promise<void> {
-  await page.goto('/login');
-  await page.waitForSelector('input[type="email"]', { timeout: 10_000 });
-  await page.locator('input[type="email"]').fill('user@klab.test');
-  await page.locator('input[type="password"]').fill('Demo1234!Pass');
-  await Promise.all([
-    page.waitForResponse((r) => r.url().includes('/api/auth/login') && r.status() === 200, {
-      timeout: 15_000,
-    }),
-    page.locator('button[type="submit"]').click(),
-  ]);
-  // İlk girişte EK-1 beyan kartı çıkabilir (bir kereye mahsus) — onayla.
-  await acceptConsentIfShown(page);
-  await page.waitForURL(/\/(rooms|dashboard)/, { timeout: 15_000 });
+  // Temiz DB'de seed'li demo kullanıcı yok → test kendi hesabını kaydeder.
+  await registerAndLogin(page);
 }
 
 test.describe('Yeni özellik seti', () => {

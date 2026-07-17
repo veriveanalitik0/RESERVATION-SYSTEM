@@ -2,24 +2,12 @@
  * E2E: genel sohbet (rol-bağımsız chat) — `/sohbet`
  */
 import { test, expect, Page } from '@playwright/test';
-import { acceptConsentIfShown } from './helpers';
+import { registerAndLogin } from './helpers';
 
 async function userLogin(page: Page): Promise<void> {
-  await page.goto('/login');
-  await page.waitForSelector('input[type="email"]', { timeout: 10_000 });
-  await page.locator('input[type="email"]').fill('user@klab.test');
-  await page.locator('input[type="password"]').fill('Demo1234!Pass');
-  await Promise.all([
-    page.waitForResponse(
-      (r) => r.url().includes('/api/auth/login') && r.status() === 200,
-      { timeout: 15_000 }
-    ),
-    page.locator('button[type="submit"]').click(),
-  ]);
-  // İlk girişte EK-1 beyan kartı çıkabilir (bir kereye mahsus) — onayla.
-  await acceptConsentIfShown(page);
-  // Aktif booking'i olan kullanıcı /dashboard'a, yoksa /rooms'a yönlenir.
-  await page.waitForURL(/\/(rooms|dashboard)/, { timeout: 15_000 });
+  // Temiz DB'de seed'li demo kullanıcı yok → test kendi hesabını kaydeder.
+  // Kişi listesinde en az bootstrap admin görünür (chat kişileri = tüm user+admin).
+  await registerAndLogin(page);
 }
 
 test('sohbet sayfası açılır + kişi listesi yüklenir', async ({ page }) => {
