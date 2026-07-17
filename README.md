@@ -56,17 +56,19 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 # nginx :80 → statik frontend + /api reverse proxy → backend
 ```
 
-- **İlk kurulum seed'i:** Prod'da seed varsayılan olarak kapalıdır. Bootstrap admin + odalar + kitap katalogunu bir kez yüklemek için `.env.prod`'a `ALLOW_PROD_SEED=true` ekleyip stack'i başlatın, ardından bu değeri kaldırın.
+- **İlk kurulum seed'i (otomatik):** Backend, boş bir DB'de ilk boot'ta çekirdek veriyi (bootstrap admin + odalar + kitap katalogu) **otomatik** yükler — manuel adım yok. Dolu DB'de atlanır (idempotent). Bootstrap admin parolasını `.env.prod`'da `BOOTSTRAP_ADMIN_PASSWORD` ile güçlü verin (boş bırakılırsa varsayılan kullanılır ve uyarı loglanır).
 - **JWT anahtarları** image'e gömülmez; `backend/keys/*.pem` salt-okunur volume ile mount edilir (`cd backend && npm run keys:generate`).
 - **HTTPS** için önüne TLS terminasyonu yapan bir reverse-proxy/LB konur (`X-Forwarded-Proto` iletmeli; backend `trust proxy` ile okuyup secure cookie üretir).
 
 ## İlk Giriş
 
-Seed yalnızca tek bir **bootstrap admin** oluşturur:
+Seed yalnızca tek bir **bootstrap admin** oluşturur (dev varsayılanı):
 
 | E-posta | Parola |
 |---------|--------|
 | `admin@klab.test` | `Admin1234!Pass` |
+
+Prod'da e-posta/parola env ile verilir: `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` (bkz. `.env.prod.example`).
 
 > ⚠️ İlk girişten sonra bu parolayı **derhal değiştirin** (`/admin` → parola değişikliği).
 

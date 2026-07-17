@@ -117,11 +117,18 @@ interface DemoAdminSeed {
   role: 'admin' | 'super_admin';
 }
 
+// Bootstrap admin bilgileri env'den gelir (prod'da güçlü/gizli parola için).
+// Verilmezse dev varsayılanına düşer. Varsayılan parolanın prod'da kullanılması
+// LOUD şekilde uyarılır (bkz. seedAdmins).
+const DEFAULT_ADMIN_PASSWORD = 'Admin1234!Pass';
+const BOOTSTRAP_ADMIN_EMAIL = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim() || 'admin@klab.test';
+const BOOTSTRAP_ADMIN_PASSWORD = process.env.BOOTSTRAP_ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD;
+
 // Yalnız bir süper-admin seed'lenir. Arge/danışman/izleyici yönetişim rolleri
 // SEED'LENMEZ — admin panelinden (Kullanıcılar → rol atama) kayıtlı kullanıcılara
 // verilir. İlk girişten sonra bu parolayı MUTLAKA değiştirin.
 const DEMO_ADMINS: DemoAdminSeed[] = [
-  { email: 'admin@klab.test', password: 'Admin1234!Pass', fullName: 'AI Lab Yöneticisi', role: 'super_admin' },
+  { email: BOOTSTRAP_ADMIN_EMAIL, password: BOOTSTRAP_ADMIN_PASSWORD, fullName: 'AI Lab Yöneticisi', role: 'super_admin' },
 ];
 
 /* ============================================================
@@ -185,11 +192,21 @@ export async function seedAdmins(): Promise<void> {
     VALUES (?, ?, ?, ?, ?, ?)
   `;
 
+  // GÜVENLİK: prod'da varsayılan (bilinen) bootstrap parolası kullanılıyorsa
+  // LOUD uyar — operatör BOOTSTRAP_ADMIN_PASSWORD ile güçlü bir parola vermeli.
+  if (process.env.NODE_ENV === 'production' && BOOTSTRAP_ADMIN_PASSWORD === DEFAULT_ADMIN_PASSWORD) {
+
+    console.warn(
+      '[SEED] UYARI: Bootstrap admin VARSAYILAN parola ile oluşturuluyor. ' +
+        'Prod için BOOTSTRAP_ADMIN_PASSWORD ayarlayın ve/veya ilk girişten sonra DERHAL değiştirin.'
+    );
+  }
+
   for (const a of DEMO_ADMINS) {
     const hash = await argon2.hash(a.password, ARGON2_OPTIONS);
     await dbRun(INSERT_ADMIN, [nanoid(), a.email, hash, a.fullName, a.role, null]);
   }
-  console.log(`[SEED] ${DEMO_ADMINS.length} admin eklendi.`);
+  console.log(`[SEED] ${DEMO_ADMINS.length} admin eklendi (${BOOTSTRAP_ADMIN_EMAIL}).`);
 }
 
 
@@ -221,19 +238,29 @@ export async function seedBooks(): Promise<void> {
   console.log(`[SEED] ${SEED_BOOKS.length} kitap eklendi (${withCover} kapaklı).`);
 }
 
+/**
+ * Çekirdek seed: oda envanteri + bootstrap admin + kitap katalogu. Her adım
+ * idempotenttir ("zaten yüklü" ise atlar) → tekrar çağrılması güvenlidir.
+ * Demo kullanıcı/rezervasyon/showcase/lisans/waitlist/bildirim verisi YOK.
+ *
+ * NOT: Artık PROD guard'ı YOK. Seed yalnız ESANSİYEL bootstrap üretir (demo değil)
+ * ve prod'da otomatik yalnız BOŞ DB'de çalışır (bkz. seedIfEmpty). Admin parolası
+ * env'den gelir → prod'da bilinen sabit parola sızmaz.
+ */
 export async function runSeed(): Promise<void> {
-  // PROD GUARD: seed, sabit parolalı bir bootstrap admin (admin@klab.test) üretir.
-  // Üretimde yanlışlıkla çalışmasını engelle — ilk kurulumda bilinçli olarak
-  // ALLOW_PROD_SEED=true ile açın, ardından admin parolasını DERHAL değiştirin.
-  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'true') {
-    throw new Error(
-      'Seed production ortamında engellendi. İlk kurulumda bilinçli yüklemek için ' +
-        'ALLOW_PROD_SEED=true ayarlayın (ve admin parolasını derhal değiştirin).'
-    );
-  }
-  // Sıfırdan üretime çıkış: yalnız oda envanteri + bootstrap admin + kitap katalogu.
-  // Demo kullanıcı/rezervasyon/showcase/lisans/waitlist/bildirim verisi YOK.
   await seedRooms();
   await seedAdmins();
   await seedBooks();
+}
+
+/**
+ * İlk-kurulum otomasyonu: DB boşsa (hiç admin yoksa) çekirdek seed'i çalıştırır.
+ * Boot'ta (index.ts) çağrılır → prod'da manuel adım gerekmez. Dolu DB'de hiçbir
+ * şey yapmaz (idempotent + boş-kontrolü). `true` = seed uygulandı.
+ */
+export async function seedIfEmpty(): Promise<boolean> {
+  const row = (await dbOne('SELECT COUNT(*) as count FROM admins', [])) as { count: number };
+  if (Number(row.count) > 0) return false; // sistem zaten kurulmuş
+  await runSeed();
+  return true;
 }

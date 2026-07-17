@@ -13,6 +13,7 @@ import { initSchema, closeDb } from './db/schema';
 import { logger } from './utils/logger';
 import { closeAllSse } from './services/sse.service';
 import { startWaitlistMaintenance } from './services/waitlist.service';
+import { seedIfEmpty } from './db/seed';
 import { warmupTranslation } from './services/image-gen.service';
 import { startMaintenance } from './services/maintenance.service';
 import { startBackupCron } from './services/backup.service';
@@ -22,8 +23,20 @@ async function start(): Promise<void> {
   const migrationResult = await initSchema();
   logger.info('schema_ready', { applied: migrationResult.applied });
   if (migrationResult.applied.length > 0) {
-     
+
     console.log(`[KLAB] Uygulanan migrationlar: ${migrationResult.applied.join(', ')}`);
+  }
+
+  // İlk-kurulum otomasyonu: DB boşsa (hiç admin yoksa) çekirdek seed'i (oda +
+  // bootstrap admin + kitap katalogu) otomatik yükle. Idempotent + yalnız boş
+  // DB'de çalışır → prod'da manuel seed adımı GEREKMEZ. Seed hatası boot'u
+  // durdurmasın (loglanır); dolu DB'de sessizce atlanır.
+  try {
+    if (await seedIfEmpty()) {
+      logger.info('bootstrap_seed_applied');
+    }
+  } catch (err) {
+    logger.error('bootstrap_seed_failed', { err: (err as Error).message });
   }
 
   // Görsel prompt çeviri modelini (HF opus-mt-tr-en) arka planda ısıt — ilk

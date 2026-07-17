@@ -77,12 +77,10 @@ test.describe('Leaderboard (#5a)', () => {
     // Tab'lar + skor formülü açıklaması
     await expect(page.getByRole('button', { name: /Kullanıcılar/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Projeler/i })).toBeVisible();
-    // Projeler sekmesine geçiş çalışır. Temiz (prod-benzeri) DB'de onaylı proje
-    // olmayabilir → skor kartı yerine boş-durum çıkar; ikisinden biri görünmeli
-    // (sekme geçişi çalışıyor, sayfa kırılmıyor).
+    // Projeler sekmesine geçiş çalışır. "Skor: onaylı randevu ×10 + …" STATİK skor
+    // formülü açıklamasıdır (veriye bağlı değil, sekmede her zaman görünür) →
+    // temiz (prod-benzeri) DB'de de geçer. Birden çok "Skor:" olabileceğinden .first().
     await page.getByRole('button', { name: /Projeler/i }).click();
-    const score = page.getByText(/Skor:/i).first();
-    const emptyState = page.getByText(/henüz|proje yok|bulunamadı|boş/i).first();
-    await expect(score.or(emptyState)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/Skor:/i).first()).toBeVisible({ timeout: 10_000 });
   });
 });

@@ -75,6 +75,11 @@ services:
       CSRF_SECRET: ${CSRF_SECRET:?CSRF_SECRET gerekli (min 32 karakter)}
       # At-rest şifreleme (admin TOTP secret) — boşsa CSRF_SECRET'tan türetilir.
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      # İlk-kurulum bootstrap admin — DB boşsa backend boot'ta OTOMATİK oluşturur
+      # (manuel seed adımı yok). Parolayı prod'da mutlaka güçlü ver; verilmezse
+      # varsayılan kullanılır ve LOUD uyarı loglanır. İlk girişten sonra da değiştirin.
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@klab.test}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
       USER_JWT_PRIVATE_KEY_PATH: ./keys/user_private.pem
       USER_JWT_PUBLIC_KEY_PATH: ./keys/user_public.pem
       ADMIN_JWT_PRIVATE_KEY_PATH: ./keys/admin_private.pem

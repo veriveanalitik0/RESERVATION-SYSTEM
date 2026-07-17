@@ -102,16 +102,12 @@ function loadConfig(): AppConfig {
     throw new Error('[CONFIG] CSRF_SECRET minimum 32 karakter olmalı.');
   }
 
-  // PROD GUARD: rate-limit / seed kaçaklarını üretimde reddet (yanlış config ile
-  // brute-force koruması kapanmasın / demo veri sızmasın — fail-fast).
+  // PROD GUARD: yanlış config ile brute-force korumasının kapanmasını üretimde
+  // reddet (fail-fast). (Seed artık yalnız esansiyel bootstrap üretir ve boş DB'de
+  // otomatik çalışır — ayrı bir seed guard'ı gerekmez.)
   if (nodeEnv === 'production') {
     if (process.env.DISABLE_RATE_LIMIT === '1') {
       throw new Error('[CONFIG] DISABLE_RATE_LIMIT production ortamında kullanılamaz.');
-    }
-    if (process.env.ALLOW_PROD_SEED === 'true') {
-      // logger config'i import ettiğinden burada console kullanılır (circular import'tan kaçınma).
-       
-      console.warn('[CONFIG] UYARI: ALLOW_PROD_SEED=true → demo seed prod DB\'ye yüklenebilir. Yalnız ilk kurulum için açın.');
     }
   }
 
