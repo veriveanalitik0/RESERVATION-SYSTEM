@@ -3,6 +3,7 @@
 **/dist
 backend/data
 backend/keys          # JWT private key'ler — image'e gömülmez, runtime'da mount edilir
+**/*.zip              # keys.zip / env.ts.zip gibi anahtar-konfig arşivleri context'e girmesin
 **/*.log
 **/.env
 **/.env.local
