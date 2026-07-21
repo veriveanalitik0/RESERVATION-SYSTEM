@@ -37,6 +37,97 @@
 }
 
 @layer components {
+  /* ============ HERO ÜST YARI AYDINLATMASI ============ */
+  /*
+   * Landing hero'nun ve auth sayfalarının üst kısmını, logo PNG'sinin kendi
+   * panel rengiyle boyar; alt kısma DOKUNMAZ, aşağı doğru arka plana erir.
+   *
+   * RENK NEDEN #E6E4E5: kullanıcının işaret ettiği referans nokta, logo
+   * panelinin İÇİNDEKİ gölgeli gri — canlı sayfada kompozit ölçümü (PNG
+   * pikseli × maske alfası × zemin) #e6e4e5 verdi. Panelin opak düz rengi
+   * #ececec'ti; kullanıcı bunu fazla açık buldu, panel içindeki koyu tona
+   * eşitlendi. Önceki yeşilimsi #eaeee8 ise dışarıda beyazımsı alan
+   * bırakıyordu; panel içi gri + gri devre deseni tüm üst yıkamaya taşındı
+   * (::after katmanı aşağıda).
+   *
+   * SOLMA NEREDE BAŞLAR: açık/koyu bölünme, landing BAŞLIĞININ ÜSTÜNDE
+   * bitmeli — başlık artık beyaz ve tamamen koyu zeminde oturur; logo ise
+   * (viewport'un ~%47'sine kadar iner) açık bölgede kalır. Bu yüzden %66'ya
+   * (≈ 0.67 × 0.66 = viewport'un ~%44'ü) kadar TAM opak, solma %66-80
+   * bandında (≈ viewport %44-54) tamamlanır; %80-100 arası tamamen saydam.
+   * Solma bandı yine dar tutuldu — yarı saydam bantta alttaki orb/mesh
+   * katmanları satır içinde parlaklık asimetrisi yaratıyordu (zemin
+   * uniformluk metriği ihlali: sağ/sol kenar koyu, orta parlak).
+   *
+   * Neden ayrı katman: arka plan görseli (/ai-lab-bg.jpg) ve koyu yeşil
+   * gradient overlay değişmeden kalsın — yalnız üstüne açık bir yıkama biner.
+   *
+   * z-index: orb'ların ÜSTÜNDE, içeriğin (z-10+) ALTINDA kalmalı.
+   */
+  .hero-top-wash {
+    @apply absolute inset-x-0 top-0 pointer-events-none;
+    height: 67%;
+    background: linear-gradient(
+      to bottom,
+      #e6e4e5 0%,
+      #e6e4e5 66%,
+      rgba(230, 228, 229, 0.72) 72%,
+      rgba(230, 228, 229, 0.34) 76%,
+      rgba(230, 228, 229, 0) 80%
+    );
+  }
+
+  /*
+   * Logo panelinin içindeki gri devre deseninin yıkama geneline taşınmış hâli.
+   * Desen rengi (#d3d6d0) panel izlerinden bir tık koyu seçildi ki geniş düz
+   * alanda kaybolmasın; opaklık düşük tutuldu ki metin/logo ile yarışmasın.
+   * Mask, ana gradyanla AYNI duraklarda söner — yoksa desen, yıkama bittikten
+   * sonra koyu zemin üzerinde asılı kalır.
+   */
+  .hero-top-wash::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cg fill='none' stroke='%23d3d6d0' stroke-width='1.5'%3E%3Cpath d='M10 24h46l14 14v26'/%3E%3Cpath d='M150 40h-38l-12 12v22'/%3E%3Cpath d='M24 150v-30l16-16h24'/%3E%3Cpath d='M136 150v-24l-18-18'/%3E%3Cpath d='M80 6v20l10 10'/%3E%3C/g%3E%3Cg fill='%23d3d6d0'%3E%3Ccircle cx='10' cy='24' r='3'/%3E%3Ccircle cx='70' cy='64' r='3'/%3E%3Ccircle cx='150' cy='40' r='3'/%3E%3Ccircle cx='100' cy='74' r='3'/%3E%3Ccircle cx='64' cy='104' r='3'/%3E%3Ccircle cx='118' cy='108' r='3'/%3E%3Ccircle cx='90' cy='36' r='3'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 160px 160px;
+    opacity: 0.5;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 66%,
+      rgba(0, 0, 0, 0.72) 72%,
+      rgba(0, 0, 0, 0.34) 76%,
+      transparent 80%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 66%,
+      rgba(0, 0, 0, 0.72) 72%,
+      rgba(0, 0, 0, 0.34) 76%,
+      transparent 80%
+    );
+  }
+
+  /*
+   * Hero logosu — filtre YOK (bilinçli).
+   *
+   * Asset artık panelsiz üretiliyor: ai-lab-logo-mark.png, kaynağı olan
+   * ai-lab-logo-hero.png'den ayıklama scriptiyle türetildi — markanın
+   * çevresindeki yarı saydam beyaz panel + parıltı/doku katmanı kaynakta
+   * temizlendi. Eskiden burada duran radial-gradient maske o panel halkasını
+   * CSS tarafında söndürmek içindi; halka kaynaktan kalkınca kaldırıldı.
+   * Bir ara markayı zemine bağlamak için drop-shadow(0 14px 34px
+   * rgba(31,41,26,.12)) denendi; akromatik gölge, emblemin iki yanında ve
+   * yazı satırının altında gri bloklar bırakıp zemin uniformluk metriğini
+   * bozdu (satır medyanından ~8 luminans sapması). Marka artık zemine
+   * gölgesiz oturuyor; class, ileride filtre denemeleri için hook olarak
+   * duruyor.
+   */
+  .hero-logo-soft {
+    filter: none;
+  }
+
   /* ============ BUTONLAR ============ */
   .btn {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold

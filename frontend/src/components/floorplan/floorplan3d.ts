@@ -368,6 +368,94 @@ export function buildFloor3D(container: HTMLElement, opts: Floor3DOptions): Floo
     heightScaleObjs.push(amp);
   }
 
+  // MUTFAK & SALON mobilyaları (kroki ile birebir): bölgeler duvarsız/şeffaf
+  // olduğundan boş görünüyordu — grup heightScaleObjs'ta, 2D morfunda yassılır.
+  {
+    const furn = new THREE.Group();
+    grp.add(furn);
+    heightScaleObjs.push(furn);
+    const fbox = (px: number, pz: number, w: number, h: number, d: number, col: number, y0 = 0, roughv = 0.82) => {
+      const m = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshStandardMaterial({ color: new THREE.Color(col), roughness: roughv, metalness: 0.02 }),
+      );
+      m.position.set(px - CX, y0 + h / 2, pz - CZ);
+      furn.add(m);
+      return m;
+    };
+    // MUTFAK (x868-1207, y478-716): alt dolap + tezgah (lavabo delikli) + görünür gömük lavabo + üst dolap
+    fbox(1035, 512, 300, 60, 52, 0xe9e3d5, 0); // alt dolap gövdesi (0-60)
+    fbox(1035, 489, 300, 12, 6, 0x8e887c, 60); // tezgah arka şerit (yüzey 72)
+    fbox(1035, 535, 300, 12, 6, 0x8e887c, 60); // tezgah ön şerit
+    fbox(970, 512, 170, 12, 40, 0x8e887c, 60); // tezgah sol şerit
+    fbox(1152, 512, 66, 12, 40, 0x8e887c, 60); // tezgah sağ şerit
+    fbox(1088, 512, 68, 3, 46, 0x757b84, 60); // lavabo tabanı (metal, gömük)
+    fbox(1088, 494, 60, 9, 3, 0x8c9298, 63); // lavabo arka duvar
+    fbox(1088, 530, 60, 9, 3, 0x8c9298, 63); // lavabo ön duvar
+    fbox(1059, 512, 3, 9, 40, 0x8c9298, 63); // lavabo sol duvar
+    fbox(1117, 512, 3, 9, 40, 0x8c9298, 63); // lavabo sağ duvar
+    {
+      // musluk: dikey gövde silindiri + lavaboya uzanan yatay boru
+      const mat = new THREE.MeshStandardMaterial({ color: 0x9aa0a4, metalness: 0.45, roughness: 0.35 });
+      const f = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 26, 12), mat);
+      f.position.set(1088 - CX, 85, 489 - CZ);
+      furn.add(f);
+      const sp = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 17), mat);
+      sp.position.set(1088 - CX, 96, 497 - CZ);
+      furn.add(sp);
+    }
+    fbox(1035, 497, 286, 36, 30, 0xeee9db, 104); // üst dolaplar (104-140, tavan altında)
+    // SALON (x868-1207, y716-1224): ortada sehpa + 4 kenarda ona dönük dört koltuk (otur + sırt)
+    fbox(1037, 970, 90, 28, 64, 0x8b6b4c, 0); // sehpa (orta)
+    fbox(1037, 884, 54, 30, 54, 0xb7bcc0, 0); // üst koltuk otur
+    fbox(1037, 850, 54, 42, 14, 0xaab0b4, 0); // üst koltuk sırt
+    fbox(1037, 1056, 54, 30, 54, 0xb7bcc0, 0); // alt koltuk otur
+    fbox(1037, 1090, 54, 42, 14, 0xaab0b4, 0); // alt koltuk sırt
+    fbox(947, 970, 54, 30, 54, 0xb7bcc0, 0); // sol koltuk otur
+    fbox(913, 970, 14, 42, 54, 0xaab0b4, 0); // sol koltuk sırt
+    fbox(1127, 970, 54, 30, 54, 0xb7bcc0, 0); // sağ koltuk otur
+    fbox(1161, 970, 14, 42, 54, 0xaab0b4, 0); // sağ koltuk sırt
+  }
+
+  // Başlangıç işareti (radar ping): Giriş 1'in biraz önü (400,850) — krokide
+  // güzergahların başlangıç noktası. Zeminde yatık, kalıcı; heightScaleObjs'a
+  // GİRMEZ (2D'de de görünsün diye — orijinalle aynı davranış).
+  const startMk = new THREE.Group();
+  startMk.position.set(400 - CX, 4, 850 - CZ);
+  scene.add(startMk);
+  const startDot = new THREE.Mesh(
+    new THREE.CircleGeometry(15, 30),
+    new THREE.MeshBasicMaterial({ color: 0x39e084, transparent: true, opacity: 0.9, side: THREE.DoubleSide }),
+  );
+  startDot.rotation.x = -Math.PI / 2;
+  startMk.add(startDot);
+  const startCore = new THREE.Mesh(
+    new THREE.RingGeometry(19, 23, 30),
+    new THREE.MeshBasicMaterial({ color: 0x39e084, transparent: true, opacity: 0.7, side: THREE.DoubleSide }),
+  );
+  startCore.rotation.x = -Math.PI / 2;
+  startMk.add(startCore);
+  const startPulses: Array<THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>> = [];
+  for (let spi = 0; spi < 3; spi++) {
+    const pr = new THREE.Mesh(
+      new THREE.RingGeometry(0.94, 1.0, 44),
+      new THREE.MeshBasicMaterial({ color: 0x39e084, transparent: true, opacity: 0.5, side: THREE.DoubleSide }),
+    );
+    pr.rotation.x = -Math.PI / 2;
+    startMk.add(pr);
+    startPulses.push(pr);
+  }
+  // Halka birim yarıçaplı; scale ile 16→96 büyürken opaklık söner (3 faz kayık).
+  const markerUpdate = (tt: number) => {
+    for (let i = 0; i < startPulses.length; i++) {
+      const prog = (tt * 0.5 + i / startPulses.length) % 1;
+      const R = 16 + prog * 80;
+      startPulses[i].scale.set(R, R, 1);
+      startPulses[i].material.opacity = 0.5 * (1 - prog);
+    }
+    startDot.material.opacity = 0.55 + 0.45 * (0.5 + 0.5 * Math.sin(tt * 3));
+  };
+
   // ---------- kamera + morph (düz <-> 3D) ----------
   const target = new THREE.Vector3(0, 150, 0);
   let theta = -0.72, phi = 0.93, radius = 2780;
@@ -636,6 +724,7 @@ export function buildFloor3D(container: HTMLElement, opts: Floor3DOptions): Floo
       cR += (radius - cR) * 0.16;
       setCamPos();
     }
+    markerUpdate(performance.now() * 0.001);
     renderer.render(scene, camera);
   };
   const start = () => {

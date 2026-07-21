@@ -15,6 +15,7 @@ import {
   KROKI_DOTPOS,
   KROKI_INFO,
   KROKI_ROOMS,
+  KROKI_TP_INFO,
   KROKI_VIEWBOX,
   STATUS_COLORS,
   buildRoomIndex,
@@ -141,12 +142,14 @@ export default function RoomFloorPlan({ rooms, onRoomSelect, rangeLabel }: Props
       const el = containerRef.current;
       if (!el) return;
       if (!handleRef.current) {
-        // 3D etiketleri: sisteme bağlı odalarda klab adı; diğer alanlarda tür adı.
+        // 3D etiketleri: sisteme bağlı odalarda klab adı; diğer alanlarda tür
+        // adı — adlandırılmış toplantı odaları kroki adıyla (TP_INFO) ezilir.
         const labels: Record<string, string> = {
           'TP-01': 'Toplantı', 'TP-02': 'Toplantı', 'TP-03': 'Toplantı',
           'TP-04': 'Toplantı', 'TP-05': 'Toplantı', 'TP-06': 'Toplantı',
           'SS-01': 'Sistem', 'SS-02': 'Sistem',
           'MT-01': 'Mutfak', 'SL-01': 'Salon', 'BH-01': 'Bahçe',
+          ...KROKI_TP_INFO,
         };
         for (const [kid, room] of roomIndexRef.current) labels[kid] = room.name;
         handleRef.current = buildFloor3D(el, {
@@ -462,6 +465,18 @@ function FloorRoom({ def, room, on, selected, onActivate, onHover, onLeave }: Fl
     } else if (def.lab) {
       label = <MultilineLabel def={def} lx={lx} ly={ly} />;
     }
+  } else if (def.cat === 'toplanti' && KROKI_TP_INFO[def.id]) {
+    // Adlandırılmış toplantı odası: "T" yerine kroki adı (main.html TP_INFO
+    // dalıyla aynı font formülü, oda genişliğine sığacak şekilde).
+    const name = KROKI_TP_INFO[def.id];
+    const W = bx1 - bx0;
+    const H = shapeBBox(def.s)[3] - by0;
+    const size = Math.max(12, Math.min((W - 16) / (name.length * 0.58), H * 0.4, 34));
+    label = (
+      <text x={lx} y={ly} textAnchor="middle" dominantBaseline="central" fontSize={size.toFixed(1)} fill="#0e2a34">
+        {name}
+      </text>
+    );
   } else if (def.lab) {
     label = <MultilineLabel def={def} lx={lx} ly={ly} />;
   }

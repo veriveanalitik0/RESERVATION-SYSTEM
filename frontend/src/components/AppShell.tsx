@@ -11,6 +11,8 @@ import { CommandPalette } from './CommandPalette';
 import { OnboardingTour } from './OnboardingTour';
 import { SupportRequestButton } from './SupportRequestButton';
 import { ChatWidget } from './ChatWidget';
+import { ExitSurveyModal } from './ExitSurveyModal';
+import type { ExitSurveyAnswers } from '../services/api';
 import type { SubjectKind } from '../types';
 
 interface AppShellProps {
@@ -411,6 +413,11 @@ export function AppShell({
   const { logout } = auth;
   const toast = useToast();
   const navigate = useNavigate();
+  // Çıkış anketi: YALNIZ kind === 'user' için "Çıkış" butonu önce modalı açar.
+  // Anket gerçek son-kullanıcı deneyimini ölçer; operasyonel roller
+  // (admin/danisman/arge/izleyici) anket doldurmaz → doğrudan çıkarlar.
+  const [surveyOpen, setSurveyOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const me =
     kind === 'admin'
       ? auth.admin
@@ -513,13 +520,30 @@ export function AppShell({
             ? 'İzleyici'
             : 'Kullanıcı');
 
-  async function handleLogout() {
+  /**
+   * Çıkış akışı: 'user' için önce deneyim anketi modalı, sonra logout; diğer
+   * kind'ler anketsiz doğrudan buraya gelir (answers hep undefined). Anket
+   * zorunlu değildir ("Atla ve çık") ve anket isteği hata verse bile çıkış
+   * TAMAMLANIR — geri bildirim toplamak oturum kapatmayı engellememeli.
+   */
+  async function finishLogout(answers?: ExitSurveyAnswers) {
+    setLoggingOut(true);
+    if (answers) {
+      try {
+        await api.submitExitSurvey(kind, answers);
+      } catch {
+        // Anket kaydedilemedi — sessizce geç, çıkışı bloklama.
+      }
+    }
     try {
       await logout(kind);
       toast.push('info', 'Çıkış yapıldı.');
       navigate('/login', { replace: true });
     } catch {
       toast.push('error', 'Çıkış sırasında bir sorun oluştu.');
+    } finally {
+      setLoggingOut(false);
+      setSurveyOpen(false);
     }
   }
 
@@ -606,8 +630,18 @@ export function AppShell({
               </div>
             </Link>
             <button
-              onClick={handleLogout}
-              className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white/70 hover:text-white hover:bg-rose-500/20 transition-colors"
+              onClick={() => {
+                // NEDEN: Anket yalnız gerçek son-kullanıcı deneyimini ölçer;
+                // operasyonel roller (admin/danisman/arge/izleyici) anket
+                // doldurmasın → onlar için anketsiz doğrudan çıkış.
+                if (kind === 'user') {
+                  setSurveyOpen(true);
+                } else {
+                  void finishLogout();
+                }
+              }}
+              disabled={loggingOut}
+              className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white/70 hover:text-white hover:bg-rose-500/20 transition-colors disabled:opacity-50"
             >
               Çıkış
             </button>
@@ -747,6 +781,18 @@ export function AppShell({
           tıklanınca izleyici token'ıyla hata veriyordu). */}
       {kind !== 'admin' && kind !== 'izleyici' && <SupportRequestButton kind={kind} />}
       <ChatWidget />
+      {/* Çıkış anketi YALNIZ 'user' kind'de render edilir — anket gerçek
+          son-kullanıcı deneyimini ölçer; operasyonel roller (admin/danisman/
+          arge/izleyici) çıkışta anket görmez (yukarıdaki Çıkış onClick'i de
+          onları doğrudan finishLogout'a yollar). */}
+      {kind === 'user' && (
+        <ExitSurveyModal
+          open={surveyOpen}
+          busy={loggingOut}
+          onSubmit={(answers) => void finishLogout(answers)}
+          onSkip={() => void finishLogout()}
+        />
+      )}
     </div>
   );
 }

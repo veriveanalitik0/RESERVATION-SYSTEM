@@ -3,6 +3,7 @@
  */
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { getAnalytics } from '../../services/analytics.service';
+import { getExitSurveySummary } from '../../services/exit-survey.service';
 import { dbAll } from '../../db/schema';
 import { requireAdminSubject } from './shared';
 
@@ -36,6 +37,18 @@ router.get('/stats', async (_req: Request, res: Response, next: NextFunction) =>
 router.get('/analytics', requireAdminSubject, async (_req: Request, res: Response, next: NextFunction) => {
   try {
     res.json(await getAnalytics());
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* ============ ÇIKIŞ ANKETİ ÖZETİ ============ */
+
+// requireAdminSubject: serbest metin yorumlar kullanıcıyı dolaylı ifşa edebilir
+// → /analytics ile aynı kısıt, salt-okunur governance rolleri göremez (A01).
+router.get('/exit-survey', requireAdminSubject, async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json(await getExitSurveySummary());
   } catch (err) {
     next(err);
   }

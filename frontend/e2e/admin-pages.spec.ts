@@ -2,6 +2,7 @@
  * E2E: admin paneli — tüm yeni sayfalar açılır mı + critical UI elementleri
  */
 import { test, expect, Page } from '@playwright/test';
+import { dismissTourIfShown } from './helpers';
 
 async function adminLogin(page: Page): Promise<void> {
   await page.goto('/login');
@@ -9,6 +10,8 @@ async function adminLogin(page: Page): Promise<void> {
   await page.locator('input[type="password"]').fill('Admin1234!Pass');
   await page.locator('button[type="submit"]').click();
   await page.waitForURL(/\/admin/, { timeout: 15_000 });
+  // Taze context'te admin onboarding turu overlay'i tıklamaları yutar — kapat.
+  await dismissTourIfShown(page);
 }
 
 test.describe('Admin pages', () => {

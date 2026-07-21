@@ -22,31 +22,38 @@ export default function Landing() {
         <div className="absolute top-1/4 left-10 w-96 h-96 bg-kt-gold-400/25 rounded-full blur-[120px] animate-float-slow pointer-events-none" />
         <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-kt-violet-500/20 rounded-full blur-[140px] animate-float-medium pointer-events-none" />
         <div className="absolute top-10 right-1/3 w-72 h-72 bg-kt-green-600/30 rounded-full blur-[100px] pointer-events-none" />
+        {/* Üst yarı: logo panelinin tonu, ortada arka plana yumuşak geçiş.
+            Orb'ların üstünde, içeriğin (z-10) altında. Bkz. globals.css. */}
+        <div className="hero-top-wash" />
 
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pt-2 pb-6">
           {/* ============ LOGO ============ */}
           {/* Yerleşim kutusu viewport'a göre ölçülenir (100dvh − diğer içerik);
-              görsel, kutudan bağımsız absolute merkezlenir → hale kutu dışına
+              görsel, kutudan bağımsız absolute merkezlenir → görsel kutu dışına
               taşar ama yerleşimi büyütmez: hero tek ekrana sığar, scroll olmaz. */}
-          <div className="logo-embed relative w-full h-[clamp(9rem,calc(100dvh-43rem),25.5rem)] md:h-[clamp(9.5rem,calc(100dvh-37rem),25.5rem)] group">
-            <div className="absolute -inset-4 md:-inset-6 bg-kt-green-500/20 rounded-full blur-[90px] animate-glow-pulse pointer-events-none" />
-            <div className="absolute -inset-2 md:-inset-4 bg-kt-gold-400/12 rounded-full blur-[70px] pointer-events-none" />
+          {/* Görsel artık panelsiz asset (ai-lab-logo-mark.png): PNG'deki yarı
+              saydam beyaz panel + parıltı katmanı kaynakta ayıklandı, halo/maske
+              hilelerine gerek kalmadı. Sade yeşil logo. */}
+          <div className="relative w-full h-[clamp(9rem,calc(100dvh-43rem),25.5rem)] md:h-[clamp(9.5rem,calc(100dvh-37rem),25.5rem)] group">
             <img
-              src="/ai-lab-logo-hero.png"
+              src="/ai-lab-logo-mark.png"
               alt="Kuveyt Türk Yapay Zeka Laboratuvarı"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[60.9%] h-[215%] max-w-none w-auto object-contain transition-transform duration-700 group-hover:scale-[1.015]"
+              className="hero-logo-soft absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[60.9%] h-[215%] max-w-none w-auto object-contain transition-transform duration-700 group-hover:scale-[1.015]"
               loading="eager"
               decoding="async"
             />
           </div>
 
           <div className="max-w-5xl text-center animate-fade-in mt-12 md:mt-24">
+            {/* Üst yarı aydınlatması (hero-top-wash) artık başlığın ÜSTÜNDE
+                sona erer → başlık tamamen koyu zeminde, beyaz. Vurgu kelimesi
+                parlak yeşil kalır; koyu zeminde de okunur. */}
             <h1 className="h-hero mb-3">
               <span className="text-white">Yapay Zeka Laboratuvarı</span><br />
-              <span className="text-shimmer">çalışma alanlarını</span>{' '}
+              <span className="text-kt-green-600">çalışma alanlarını</span>{' '}
               <span className="text-white">projeniz için planlayın.</span>
             </h1>
-            <p className="h-hero-sub text-white/75 mb-4">
+            <p className="h-hero-sub text-white/80 mb-4">
               Genel Müdürlük <strong className="text-white">-1D</strong> kattaki Yapay Zeka
               Laboratuvarı; <strong className="text-white">NVIDIA DGX Spark</strong> ve{' '}
               <strong className="text-white">Mac Studio</strong> donanımlı çalışma istasyonları

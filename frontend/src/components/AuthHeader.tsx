@@ -32,28 +32,12 @@ export function AuthHeader({ backTo, backLabel, variant }: Props) {
       }
     >
       <Link to="/" aria-label="Ana sayfa" className="relative inline-block group">
-        {/* Çoklu yumuşak ışık halkaları */}
-        <div className="absolute inset-0 -m-8 bg-kt-gold-400/25 rounded-full blur-[60px] animate-glow-pulse pointer-events-none" />
-        {overlay && (
-          <div className="absolute inset-0 -m-6 bg-kt-violet-500/20 rounded-full blur-[48px] pointer-events-none" />
-        )}
-        <div className="absolute inset-0 -m-4 bg-kt-green-600/30 rounded-full blur-[36px] pointer-events-none" />
-
-        {overlay && (
-          <>
-            {/* Yıldız parıltıları */}
-            <svg className="absolute -top-4 -right-5 w-7 h-7 text-kt-gold-300 opacity-70 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0 L13.5 8.5 L22 12 L13.5 15.5 L12 24 L10.5 15.5 L2 12 L10.5 8.5 Z" className="animate-pulse-gold" />
-            </svg>
-            <svg className="absolute -bottom-3 -left-4 w-5 h-5 text-kt-gold-300/60 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0 L13.5 8.5 L22 12 L13.5 15.5 L12 24 L10.5 15.5 L2 12 L10.5 8.5 Z" />
-            </svg>
-          </>
-        )}
-
+        {/* Blur halo katmanları ve yıldız parıltıları KALDIRILDI: üst yarı artık
+            logonun kendi panel tonunda (hero-top-wash), bu zeminde halolar leke
+            gibi duruyordu. Landing hero ile aynı sade yeşil logo. */}
         <div className="relative aspect-[4/3] h-16 md:h-32">
           <img
-            src="/ai-lab-logo-hero.png"
+            src="/ai-lab-logo-mark.png"
             alt="Kuveyt Türk Yapay Zeka Laboratuvarı"
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[60.9%] h-[215%] max-w-none w-auto object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.02]"
             loading="eager"
@@ -61,9 +45,11 @@ export function AuthHeader({ backTo, backLabel, variant }: Props) {
           />
         </div>
       </Link>
+      {/* Header artık açık (hero-top-wash) zeminde duruyor → link koyu yeşil;
+          eski beyaz-üstü-siyah cam varyantı bu zeminde okunmuyordu. */}
       <Link
         to={backTo}
-        className="text-sm font-semibold text-white/80 hover:text-kt-gold-300 transition-colors backdrop-blur-sm bg-black/20 px-3 py-1.5 rounded-lg border border-white/10"
+        className="text-sm font-semibold text-kt-green-800 hover:text-kt-green-950 transition-colors bg-white/70 hover:bg-white px-3 py-1.5 rounded-lg border border-kt-green-900/10 shadow-sm"
       >
         {backLabel}
       </Link>

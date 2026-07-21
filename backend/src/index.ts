@@ -14,6 +14,7 @@ import { logger } from './utils/logger';
 import { closeAllSse } from './services/sse.service';
 import { startWaitlistMaintenance } from './services/waitlist.service';
 import { seedIfEmpty } from './db/seed';
+import { runDemoSeed } from './db/seed-demo';
 import { warmupTranslation } from './services/image-gen.service';
 import { startMaintenance } from './services/maintenance.service';
 import { startBackupCron } from './services/backup.service';
@@ -37,6 +38,17 @@ async function start(): Promise<void> {
     }
   } catch (err) {
     logger.error('bootstrap_seed_failed', { err: (err as Error).message });
+  }
+
+  // Demo veri — YALNIZ SEED_DEMO=1 ile ve NODE_ENV!=production iken. Guard
+  // runDemoSeed içinde; flag yoksa no-op. Yerelde docker-compose.override.yml
+  // (git-ignored) üzerinden açılır → prod compose dosyalarına sızmaz.
+  try {
+    if (await runDemoSeed()) {
+      logger.info('demo_seed_applied');
+    }
+  } catch (err) {
+    logger.error('demo_seed_failed', { err: (err as Error).message });
   }
 
   // Görsel prompt çeviri modelini (HF opus-mt-tr-en) arka planda ısıt — ilk

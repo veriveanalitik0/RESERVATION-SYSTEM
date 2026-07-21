@@ -468,6 +468,22 @@ DO $$ BEGIN
   ALTER TABLE license_requests ADD CONSTRAINT fk_license_requests_19 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT;
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
+-- Çıkış anketi — oturum bazında deneyim memnuniyeti (bkz. migration 0011).
+-- subject_id'ye FK YOK: admins/users ayrı tablolar ve hesap silinse de geri
+-- bildirim istatistiği korunmalı.
+CREATE TABLE IF NOT EXISTS exit_surveys (
+          id TEXT PRIMARY KEY,
+          subject_id TEXT NOT NULL,
+          subject_type TEXT NOT NULL CHECK (subject_type IN ('user', 'admin')),
+          overall INTEGER CHECK (overall IS NULL OR overall BETWEEN 1 AND 5),
+          workspace INTEGER CHECK (workspace IS NULL OR workspace BETWEEN 1 AND 5),
+          booking_ease INTEGER CHECK (booking_ease IS NULL OR booking_ease BETWEEN 1 AND 5),
+          support INTEGER CHECK (support IS NULL OR support BETWEEN 1 AND 5),
+          recommend INTEGER CHECK (recommend IS NULL OR recommend BETWEEN 1 AND 5),
+          comment TEXT,
+          created_at TEXT NOT NULL DEFAULT to_char(now(), 'YYYY-MM-DD HH24:MI:SS')
+);
+
 DO $$ BEGIN
   ALTER TABLE hardware_requests ADD CONSTRAINT fk_hardware_requests_20 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT;
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
@@ -484,6 +500,8 @@ DO $$ BEGIN
   ALTER TABLE visuals ADD CONSTRAINT fk_visuals_23 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL;
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
+CREATE INDEX IF NOT EXISTS idx_exit_surveys_created ON exit_surveys(substr(created_at, 1, 10));
+CREATE INDEX IF NOT EXISTS idx_exit_surveys_subject ON exit_surveys(subject_type, subject_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE status != 3;
 CREATE INDEX IF NOT EXISTS idx_admins_email ON admins(email) WHERE status != 3;
 CREATE INDEX IF NOT EXISTS idx_audit_event ON audit_logs(event_type, created_at);

@@ -13,12 +13,14 @@
  */
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import {
+  exitSurveySchema,
   forgotPasswordSchema,
   loginSchema,
   refreshSchema,
   registerSchema,
   resetPasswordSchema,
 } from '../validators/schemas';
+import { recordExitSurvey } from '../services/exit-survey.service';
 import {
   unifiedLogin,
   registerUser,
@@ -318,6 +320,29 @@ router.post(
         consentAcceptedAt: result.consentAcceptedAt,
         version: CONSENT_VERSION,
       });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
+ * Çıkış anketi — kullanıcı "Çıkış" derken doldurduğu 5 soruluk deneyim anketi.
+ *
+ * Logout'tan ÖNCE çağrılır (token hâlâ geçerliyken). Anket zorunlu değildir:
+ * kullanıcı "Atla" derse istek hiç atılmaz. Anket kaydı BAŞARISIZ olsa bile
+ * çıkış engellenmemeli — frontend hatayı yutar ve logout'a devam eder.
+ */
+router.post(
+  '/exit-survey',
+  csrfProtection,
+  requireAnySubject,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const input = exitSurveySchema.parse(req.body);
+      const auth = req.auth!;
+      const { saved } = await recordExitSurvey(auth.subjectId, auth.subjectType, input);
+      res.status(saved ? 201 : 200).json({ saved });
     } catch (err) {
       next(err);
     }

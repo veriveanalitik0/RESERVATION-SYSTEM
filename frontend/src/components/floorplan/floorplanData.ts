@@ -5,8 +5,12 @@
  * Oda kimlikleri kroki kodlarıdır (CA-01..CA-18, TP-*, SS-*, OT-*, DN/ET/BH/MT/SL).
  *
  * klab eşlemesi, pod kodundaki SAYI + POD_TO_KROKI tablosuyla yapılır
- * ("AILAB -1D 4-2xNVD" → 4 → CA-04; ama örn. 18 → CA-06 — güncel krokide
- * çizim kimlikleri pod numaralarıyla birebir değil).
+ * (kaynak: main.html CALISMA_INFO[*].full — "AILAB-1D 4-2xNVD CUDA" → 4 →
+ * CA-04; ama örn. 18 → CA-06 — çizim kimlikleri pod numaralarıyla birebir
+ * DEĞİL). Oda fotoğrafları ise POD NUMARASIYLA adlandırılır
+ * (/kroki/CA-NN.jpg, NN = pod no; main.html imgId kuralı) — çizim kimliğiyle
+ * karıştırma: pod 18'in çizimi CA-06, fotoğrafı CA-18.jpg (bkz.
+ * krokiPhotoForRoom).
  * Görünen ad/cihaz/kapasite DAİMA klab DB'den gelir; krokideki CALISMA_INFO
  * yer tutucuları kullanılmaz.
  */
@@ -59,6 +63,19 @@ export const KROKI_CAT: Record<KrokiCat, { name: string; color: string }> = {
   bahce: { name: 'Bahçe', color: '#4E9A51' },
   mutfak: { name: 'Mutfak', color: '#F2921C' },
   salon: { name: 'Salon', color: '#F2921C' },
+};
+
+/**
+ * Toplantı odalarının kroki görünen adları (main.html TP_INFO ile birebir).
+ * Toplantı odaları randevu sistemi dışıdır, DB'de karşılıkları yoktur; bu
+ * yüzden adları — DB'den gelen pod adlarının aksine — krokiden alınır.
+ * Adı olmayan TP odaları planda büyük "T" etiketiyle kalır.
+ */
+export const KROKI_TP_INFO: Record<string, string> = {
+  'TP-02': 'Data',
+  'TP-04': 'Analytics',
+  'TP-05': 'Python',
+  'TP-06': 'Outlier',
 };
 
 /** Kroki geometrisi — main.html ROOMS dizisiyle birebir. */
@@ -136,9 +153,10 @@ export function shapeBBox(s: KrokiShape): [number, number, number, number] {
 }
 
 /**
- * Pod numarası → kroki oda kimliği (kaynak: Kroki main.html CALISMA_INFO).
- * Güncel krokide çizim kimlikleri pod numaralarıyla birebir DEĞİL: pod 1
- * (CUDA) CA-03'te, pod 18 (Polars) sağ kolonda CA-06'da vb.
+ * Pod numarası → kroki oda kimliği (kaynak: main.html CALISMA_INFO[*].full,
+ * "AILAB-1D N-…" desenleri). Güncel krokide de çizim kimlikleri pod
+ * numaralarıyla birebir DEĞİL: pod 1 CA-03'te, pod 18 sağ kolonda CA-06'da
+ * vb. Fotoğraf kimliği ise pod numarasını izler (bkz. krokiPhotoForRoom).
  */
 const POD_TO_KROKI: Record<number, string> = {
   1: 'CA-03', 2: 'CA-02', 3: 'CA-01', 4: 'CA-04', 5: 'CA-05',
@@ -160,6 +178,18 @@ export function krokiIdForRoom(room: Pick<Room, 'code' | 'roomType'>): string | 
   if (!m) return null;
   const n = parseInt(m[1], 10);
   return POD_TO_KROKI[n] ?? null;
+}
+
+/**
+ * klab pod odası → oda fotoğrafı yolu (/kroki/CA-NN.jpg).
+ * Fotoğraf kimliği POD NUMARASIDIR (main.html imgId ile aynı kural), kroki
+ * ÇİZİM kimliği değil — pod 18'in çizimi CA-06 ama fotoğrafı CA-18.jpg.
+ * Bu yüzden yol krokiIdForRoom'dan DEĞİL, pod kodundaki sayıdan türetilir.
+ */
+export function krokiPhotoForRoom(room: Pick<Room, 'code'>): string | null {
+  const m = room.code.match(/-1D\s+(\d+)-/);
+  if (!m) return null;
+  return `/kroki/CA-${m[1].padStart(2, '0')}.jpg`;
 }
 
 /** rooms listesinden krokiId → Room haritası üretir. */
@@ -232,7 +262,9 @@ export const KROKI_INFO: Record<string, KrokiInfoMeta> = {
 
 function tpMeta(id: string): KrokiInfoMeta {
   return {
-    title: 'Toplantı Odası',
+    // Adlandırılmış toplantı odalarında başlık kroki adı (TP_INFO); tür bilgisi
+    // zaten satırlarda — kroki modalındaki "ad + tür rozeti" düzeniyle uyumlu.
+    title: KROKI_TP_INFO[id] ?? 'Toplantı Odası',
     desc: 'Ekip toplantıları, sunum ve görüşmeler için kapalı oda. Randevu sistemi kapsamında değildir.',
     rows: [['Tür', 'Toplantı Odası'], ['Kapasite', '6–8 kişi'], ['Donanım', 'Ekran + beyaz tahta']],
     img: `/kroki/${id}.jpg`,

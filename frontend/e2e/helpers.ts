@@ -35,7 +35,33 @@ export async function registerAndLogin(page: Page): Promise<string> {
   await acceptConsentIfShown(page);
   // Aktif booking'i olan kullanıcı /dashboard'a, yoksa /rooms'a yönlenir.
   await page.waitForURL(/\/(rooms|dashboard)/, { timeout: 15_000 });
+  // Taze hesapta onboarding turu (z-[70] tam ekran overlay) açılır ve tüm
+  // tıklamaları yutar — UI adımlarına geçmeden kapat.
+  await dismissTourIfShown(page);
   return email;
+}
+
+/**
+ * Onboarding turu ("Hoş geldin!" modalı) çıktıysa "Atla" ile kapatır.
+ *
+ * Tur, localStorage 'klab:onboarding:<kind>:done:v2' anahtarı YOKSA mount'tan
+ * ~800ms sonra açılır (OnboardingTour.tsx) ve tam ekran overlay olarak diğer
+ * tüm tıklamaları yutar. Taze browser context'te (her e2e testi) localStorage
+ * boş olduğundan login sonrası her kind'de tetiklenir. "Atla" varsayılan işaretli
+ * "Bunu bir daha gösterme" ile flag'i yazar — aynı context'te tekrar açılmaz.
+ * Tur çıkmadıysa (flag zaten yazılmış) sessizce döner.
+ */
+export async function dismissTourIfShown(page: Page): Promise<void> {
+  const skipBtn = page.getByRole('button', { name: 'Atla' });
+  try {
+    // 800ms açılış gecikmesi + render payı — tur yoksa 3sn sonra vazgeç.
+    await skipBtn.waitFor({ state: 'visible', timeout: 3_000 });
+  } catch {
+    return; // Tur yok — daha önce kapatılmış.
+  }
+  await skipBtn.click();
+  // Overlay kapanmadan sonraki tıklamalar yine yutulur — kaybolmasını bekle.
+  await skipBtn.waitFor({ state: 'hidden', timeout: 3_000 }).catch(() => {});
 }
 
 /**

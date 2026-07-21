@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from 'react';
 import type { AuthUser, SubjectKind } from '../types';
 import { sessionStore } from '../services/storage';
-import { api } from '../services/api';
+import { api, clearCsrfCache } from '../services/api';
 
 /**
  * Auth state — 4 ayrı oturum slotu. Her kind kendi token'ını ayrı
@@ -105,6 +105,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * hesabın türevidir, ayrı bir login değildir.
    */
   const applySession = useCallback((kind: SubjectKind, subject: AuthUser) => {
+    // 0. CSRF önbelleğini düşür. Token, refresh cookie'sine bağlıdır
+    //    (cookie-auth.ts → getSessionIdentifier); login/register refresh
+    //    cookie'sini değiştirdiği için önceki token ARTIK GEÇERSİZDİR.
+    //    Temizlemezsek oturumdaki ilk mutasyon 403 CSRF_INVALID alıp
+    //    retry'a düşüyor ve her seferinde bir 'csrf.failure' audit kaydı üretiyordu.
+    clearCsrfCache();
     // 1. Diğer kind'ların storage'ını da temizle (sessionStore.clear hem token hem state)
     for (const k of ALL_KINDS) {
       if (k !== kind) sessionStore.clear(k);

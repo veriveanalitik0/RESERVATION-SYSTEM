@@ -8,6 +8,7 @@ import LoginPage from '@/components/ui/gaming-login';
 import { ConsentCard } from '../components/ConsentCard';
 import { AuthBackground } from '../components/AuthBackground';
 import { AuthHeader } from '../components/AuthHeader';
+import { DevQuickLogin, type QuickAccount } from '../components/DevQuickLogin';
 import type { AuthUser, SubjectKind } from '../types';
 
 /**
@@ -76,12 +77,17 @@ export default function Login() {
     navigate(destination, { replace: true });
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  /**
+   * Ortak giriş akışı — form gönderimi ve hızlı-giriş aynı yolu kullanır.
+   * Kimlik bilgileri parametreden gelir: hızlı-giriş setState'in bir sonraki
+   * render'ını beklemeden doğrudan çağırabilsin diye (state'ten okusaydı bir
+   * tık gecikmeli, bayat değerle giriş denerdi).
+   */
+  async function doLogin(loginEmail: string, loginPassword: string) {
     if (loading) return;
     setLoading(true);
     try {
-      const result = await login(email, password);
+      const result = await login(loginEmail, loginPassword);
       if (result.mfaRequired && result.mfaPendingToken) {
         // Oturum henüz açılmadı — TOTP adımına geç.
         setMfaPendingToken(result.mfaPendingToken);
@@ -100,6 +106,18 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    void doLogin(email, password);
+  }
+
+  /** Hızlı-giriş: alanları da doldur (kullanıcı hangi hesapla girdiğini görsün). */
+  function handleQuickPick(acc: QuickAccount) {
+    setEmail(acc.email);
+    setPassword(acc.password);
+    void doLogin(acc.email, acc.password);
   }
 
   async function handleMfaSubmit(e: React.FormEvent) {
@@ -217,18 +235,21 @@ export default function Login() {
             </button>
           </form>
         ) : (
-          <LoginPage.LoginForm
-            email={email}
-            password={password}
-            remember={remember}
-            loading={loading}
-            onEmailChange={setEmail}
-            onPasswordChange={setPassword}
-            onRememberChange={setRemember}
-            onSubmit={handleSubmit}
-            registerHref="/register"
-            forgotHref="/forgot-password"
-          />
+          <>
+            <LoginPage.LoginForm
+              email={email}
+              password={password}
+              remember={remember}
+              loading={loading}
+              onEmailChange={setEmail}
+              onPasswordChange={setPassword}
+              onRememberChange={setRemember}
+              onSubmit={handleSubmit}
+              registerHref="/register"
+              forgotHref="/forgot-password"
+            />
+            <DevQuickLogin onPick={handleQuickPick} disabled={loading} />
+          </>
         )}
       </div>
     </div>

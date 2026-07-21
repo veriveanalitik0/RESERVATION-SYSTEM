@@ -594,3 +594,20 @@ export type CreateBookInput = z.infer<typeof createBookSchema>;
 export type UpdateBookInput = z.infer<typeof updateBookSchema>;
 export type BorrowBookInput = z.infer<typeof borrowBookSchema>;
 export type RequestExtensionInput = z.infer<typeof requestExtensionSchema>;
+
+/**
+ * Çıkış anketi — 5 soru 1..5 puan + opsiyonel yorum. Tüm alanlar opsiyonel:
+ * kullanıcı istediğini boş bırakabilir (hepsi boşsa servis kayıt yazmaz).
+ */
+const surveyScore = z.number().int().min(1).max(5).nullable().optional();
+
+export const exitSurveySchema = z.object({
+  overall: surveyScore,
+  workspace: surveyScore,
+  bookingEase: surveyScore,
+  support: surveyScore,
+  recommend: surveyScore,
+  comment: z.string().trim().max(1000, 'Yorum en fazla 1000 karakter olabilir.').nullable().optional(),
+});
+
+export type ExitSurveyInput = z.infer<typeof exitSurveySchema>;

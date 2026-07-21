@@ -42,6 +42,9 @@ export function AuthBackground({ greenOrb = false }: Props) {
       {greenOrb && (
         <div className="absolute top-10 right-1/3 w-72 h-72 bg-kt-green-600/30 rounded-full blur-[100px] pointer-events-none" />
       )}
+      {/* 6. Üst yarı aydınlatması — Landing hero ile aynı: logo panelinin tonu,
+             ortada arka plana yumuşak geçiş. Orb'ların üstünde, içeriğin altında. */}
+      <div className="hero-top-wash" />
     </>
   );
 }

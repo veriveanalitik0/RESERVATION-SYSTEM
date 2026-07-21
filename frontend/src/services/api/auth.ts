@@ -6,6 +6,16 @@ import type { ApiError, AuthUser, MfaEnrollResult, MfaStatus, SubjectKind } from
 import { sessionStore } from '../storage';
 import { API_BASE, fetchCsrfToken, request, staffKind } from './core';
 
+/** Çıkış anketi yanıtları — puanlar 1..5, tümü opsiyonel. */
+export interface ExitSurveyAnswers {
+  overall?: number | null;
+  workspace?: number | null;
+  bookingEase?: number | null;
+  support?: number | null;
+  recommend?: number | null;
+  comment?: string | null;
+}
+
 export const authApi = {
   async login(email: string, password: string) {
     return request<{
@@ -100,6 +110,18 @@ export const authApi = {
   async acceptConsent(kind: SubjectKind) {
     return request<{ ok: true; consentAcceptedAt: string; version: string }>('/auth/consent', {
       method: 'POST',
+      kind,
+    });
+  },
+
+  /**
+   * Çıkış anketi yanıtı — logout'tan ÖNCE, token hâlâ geçerliyken çağrılır.
+   * Tüm alanlar opsiyonel; hepsi boşsa backend kayıt yazmaz ({saved:false}).
+   */
+  async submitExitSurvey(kind: SubjectKind, answers: ExitSurveyAnswers) {
+    return request<{ saved: boolean }>('/auth/exit-survey', {
+      method: 'POST',
+      body: answers,
       kind,
     });
   },

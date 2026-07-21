@@ -1,6 +1,7 @@
 /**
  * Oda detay modalı — "devamını göster" / karta tıklayınca açılır.
- * Cihaz, açıklama, teknik özellikler (specs JSON'undan) ve MÜSAİTLİK gösterir:
+ * İstasyon fotoğrafı (pod odaları için /kroki/CA-NN.jpg, bkz. krokiPhotoForRoom),
+ * cihaz, açıklama, teknik özellikler (specs JSON'undan) ve MÜSAİTLİK gösterir:
  * boş günler, dolu tarih aralıkları ve önümüzdeki 2 haftanın dolu saatleri.
  */
 import { useEffect, useState } from 'react';
@@ -8,6 +9,7 @@ import { createPortal } from 'react-dom';
 import { api } from '../services/api';
 import { FEATURES } from '../constants/features';
 import { roomCategoryLabel } from '../lib/utils';
+import { krokiPhotoForRoom } from './floorplan/floorplanData';
 import type { Room, RoomAvailability } from '../types';
 
 interface SpecItem {
@@ -97,6 +99,8 @@ export function RoomDetailModal({ room, open, onClose, onBook, onBookAfter, from
 
   if (!open || !room) return null;
   const specs = parseSpecs(room.specs);
+  // Pod odaları için istasyon fotoğrafı (pod dışı türlerde null → blok hiç render edilmez).
+  const photo = krokiPhotoForRoom(room);
   // availableWeekdays oda listesinden (kart) gelir; detay yüklenince onunla güncellenir.
   const availableWeekdays = availability?.availableWeekdays ?? room.availableWeekdays ?? [];
   const nextAvailableDate = availability?.nextAvailableDate ?? room.nextAvailableDate;
@@ -129,6 +133,22 @@ export function RoomDetailModal({ room, open, onClose, onBook, onBookAfter, from
             </svg>
           </button>
         </header>
+
+        {/* İstasyon fotoğrafı — kroki bilgi kartıyla aynı desen (tam genişlik,
+            yüklenemezse sessizce gizlenir). key=photo: oda değişince <img>
+            remount olur, önceki onError'ın display:none'ı taşınmaz. */}
+        {photo && (
+          <img
+            key={photo}
+            src={photo}
+            alt={`${room.name} istasyonu fotoğrafı`}
+            className="w-full h-44 object-cover"
+            loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        )}
 
         <div className="p-6 space-y-5">
           <div className="flex flex-wrap items-center gap-2">
