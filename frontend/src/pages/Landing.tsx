@@ -55,17 +55,18 @@ export default function Landing() {
             </h1>
             <p className="h-hero-sub text-white/80 mb-4">
               Genel Müdürlük <strong className="text-white">-1D</strong> kattaki Yapay Zeka
-              Laboratuvarı; <strong className="text-white">NVIDIA DGX Spark</strong> ve{' '}
-              <strong className="text-white">Mac Studio</strong> donanımlı çalışma istasyonları
-              ile 15 kişilik AI Deneyim Alanı'nı bir araya getirir. Projenizi anlatın, uygun
-              istasyon için izin alın ve sizin için en uygun tarihe randevunuzu oluşturun.
+              Laboratuvarı; <strong className="text-white">NVIDIA DGX Spark</strong>,{' '}
+              <strong className="text-white">Mac Studio</strong> ve{' '}
+              <strong className="text-white">MacBook Pro</strong> donanımlı çalışma
+              istasyonlarını bir araya getirir. Projenizi anlatın, uygun istasyon için izin
+              alın ve sizin için en uygun tarihe randevunuzu oluşturun.
             </p>
 
             {/* Stats grid — koyu zeminde açık çim + turuncu accent */}
             <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto mb-6">
               <div className="text-center">
                 <div className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-none">
-                  <AnimatedCounter end={6} duration={1400} />
+                  <AnimatedCounter end={4} duration={1400} />
                 </div>
                 <div className="mt-2 text-[10px] md:text-xs font-bold uppercase tracking-[0.18em] text-kt-green-300">
                   NVIDIA DGX Spark
@@ -73,7 +74,7 @@ export default function Landing() {
               </div>
               <div className="text-center border-x border-white/10">
                 <div className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-none">
-                  <AnimatedCounter end={13} duration={1600} />
+                  <AnimatedCounter end={19} duration={1600} />
                 </div>
                 <div className="mt-2 text-[10px] md:text-xs font-bold uppercase tracking-[0.18em] text-kt-green-300">
                   Mac Studio
@@ -81,10 +82,10 @@ export default function Landing() {
               </div>
               <div className="text-center">
                 <div className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-none">
-                  <AnimatedCounter end={15} duration={1800} />
+                  <AnimatedCounter end={18} duration={1800} />
                 </div>
                 <div className="mt-2 text-[10px] md:text-xs font-bold uppercase tracking-[0.18em] text-kt-gold-300">
-                  AI Deneyim Alanı
+                  MacBook Pro
                 </div>
               </div>
             </div>

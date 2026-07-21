@@ -21,6 +21,7 @@ import { useToast } from '../components/Toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeEvents } from '../hooks/useRealtimeEvents';
 import { api } from '../services/api';
+import { computeNextVisit, daysAwayLabel } from '../components/UpcomingVisitCard';
 import { bookingPeriodLabel, daysUntilYmd, ymdLocal } from '../lib/utils';
 import type { Appointment, BookLoan, Booking } from '../types';
 
@@ -207,6 +208,16 @@ export default function UserDashboard() {
       .sort((a, b) => (a.startAt < b.startAt ? -1 : 1))
       .slice(0, 4);
   }, [appointments]);
+
+  // Randevu yoksa "Yaklaşan Ziyaretler" kartında en yakın ONAYLI dönem
+  // başlangıcı gösterilir — takvimle aynı öncelik kuralı (computeNextVisit).
+  // Bekleyen talepler bilinçli olarak gösterilmez: tarihler onaylanınca
+  // takvime/karta düşer (kullanıcı kararı, 2026-07-21).
+  const nextBookingStart = useMemo(() => {
+    if (upcomingAppointments.length > 0) return null;
+    const v = computeNextVisit(appointments, bookings);
+    return v && v.kind === 'approved' ? v : null;
+  }, [upcomingAppointments, appointments, bookings]);
 
   // Aktif (ve gecikmiş) ödünçler — teslim tarihi en yakın olan üstte.
   const activeLoans = useMemo(
@@ -435,16 +446,43 @@ export default function UserDashboard() {
             <section className="card p-6">
               <CardHeader title="Yaklaşan Ziyaretler" to="/takvim" toLabel="Takvim →" />
               {upcomingAppointments.length === 0 ? (
-                <div className="py-6 text-center">
-                  <p className="text-sm text-kt-gray-400 mb-3">
-                    Yaklaşan ziyaret randevunuz yok.
-                  </p>
-                  <Link
-                    to="/takvim"
-                    className="text-sm font-semibold text-kt-green-700 hover:text-kt-gold-600"
-                  >
-                    Takvimden randevu planla →
-                  </Link>
+                <div className="py-6">
+                  {/* Randevu yoksa en yakın ONAYLI dönem başlangıcını göster. */}
+                  {nextBookingStart && !loadingBookings ? (
+                    <div className="flex items-center gap-3 rounded-xl border px-3 py-2.5 mb-3 bg-kt-green-50 border-kt-green-200">
+                      <div className="w-12 shrink-0 text-center rounded-lg bg-white border border-kt-gray-200 py-1.5">
+                        <div className="text-[10px] uppercase font-bold text-kt-gold-700 leading-none">
+                          {new Date(`${nextBookingStart.date}T00:00:00`).toLocaleDateString(
+                            'tr-TR',
+                            { weekday: 'short' }
+                          )}
+                        </div>
+                        <div className="text-sm font-extrabold text-kt-green-900 leading-tight">
+                          {new Date(`${nextBookingStart.date}T00:00:00`).getDate()}
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-kt-green-900 truncate">
+                          {nextBookingStart.roomCode} · {nextBookingStart.roomName}
+                        </p>
+                        <p className="text-xs text-kt-gray-500">
+                          Dönem başlangıcı · {daysAwayLabel(daysUntilYmd(nextBookingStart.date))}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-kt-gray-400 mb-3 text-center">
+                      Yaklaşan ziyaret randevunuz yok.
+                    </p>
+                  )}
+                  <div className="text-center">
+                    <Link
+                      to="/takvim"
+                      className="text-sm font-semibold text-kt-green-700 hover:text-kt-gold-600"
+                    >
+                      Takvimden randevu planla →
+                    </Link>
+                  </div>
                 </div>
               ) : (
                 <ul className="space-y-3">

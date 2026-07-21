@@ -6,10 +6,11 @@
  * user-dışı kind'lerde hiç render etmez — anket son-kullanıcı deneyimini
  * ölçer; operasyonel roller (admin/danisman/arge/izleyici) anket doldurmaz.
  *
- * Akış (AppShell.finishLogout):
- *   Çıkış'a tıkla → modal → (Gönder | Atla) → api.submitExitSurvey → logout
- * Anket kaydı başarısız olursa bile çıkış TAMAMLANIR — geri bildirim toplamak
- * oturum kapatmayı engellememeli.
+ * Akış (AppShell çıkış zinciri, yalnız user):
+ *   Çıkış'a tıkla → bu modal → (Gönder | Atla) → api.submitExitSurvey →
+ *   ProjectSurveyModal (proje sonu anketi) → logout
+ * Anket kaydı başarısız olursa bile zincir İLERLER ve çıkış TAMAMLANIR —
+ * geri bildirim toplamak oturum kapatmayı engellememeli.
  */
 import { useState } from 'react';
 import type { ExitSurveyAnswers } from '../services/api';

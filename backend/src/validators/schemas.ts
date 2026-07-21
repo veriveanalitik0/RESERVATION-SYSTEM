@@ -611,3 +611,22 @@ export const exitSurveySchema = z.object({
 });
 
 export type ExitSurveyInput = z.infer<typeof exitSurveySchema>;
+
+/**
+ * Proje sonu anketi — 3 açık uçlu soru. Tüm alanlar opsiyonel: kullanıcı
+ * istediğini boş bırakabilir (trim sonrası hepsi boşsa servis kayıt yazmaz).
+ */
+const surveyText = z
+  .string()
+  .trim()
+  .max(4000, 'Yanıt en fazla 4000 karakter olabilir.')
+  .nullable()
+  .optional();
+
+export const projectSurveySchema = z.object({
+  projectWork: surveyText,
+  labFeedback: surveyText,
+  improvement: surveyText,
+});
+
+export type ProjectSurveyInput = z.infer<typeof projectSurveySchema>;

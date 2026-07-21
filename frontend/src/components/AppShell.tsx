@@ -12,7 +12,8 @@ import { OnboardingTour } from './OnboardingTour';
 import { SupportRequestButton } from './SupportRequestButton';
 import { ChatWidget } from './ChatWidget';
 import { ExitSurveyModal } from './ExitSurveyModal';
-import type { ExitSurveyAnswers } from '../services/api';
+import { ProjectSurveyModal } from './ProjectSurveyModal';
+import type { ExitSurveyAnswers, ProjectSurveyAnswers } from '../services/api';
 import type { SubjectKind } from '../types';
 
 interface AppShellProps {
@@ -413,10 +414,14 @@ export function AppShell({
   const { logout } = auth;
   const toast = useToast();
   const navigate = useNavigate();
-  // Çıkış anketi: YALNIZ kind === 'user' için "Çıkış" butonu önce modalı açar.
-  // Anket gerçek son-kullanıcı deneyimini ölçer; operasyonel roller
+  // Çıkış anket ZİNCİRİ durum makinesi — YALNIZ kind === 'user' için işler:
+  //   null      → anket yok (normal kullanım)
+  //   'deneyim' → ExitSurveyModal açık (5 soruluk deneyim anketi)
+  //   'proje'   → ProjectSurveyModal açık (proje sonu serbest metin anketi)
+  // Sıra: Çıkış → 'deneyim' → (gönder|atla farketmez) → 'proje' → logout.
+  // Anketler gerçek son-kullanıcı geri bildirimini toplar; operasyonel roller
   // (admin/danisman/arge/izleyici) anket doldurmaz → doğrudan çıkarlar.
-  const [surveyOpen, setSurveyOpen] = useState(false);
+  const [surveyStep, setSurveyStep] = useState<null | 'deneyim' | 'proje'>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const me =
     kind === 'admin'
@@ -521,16 +526,38 @@ export function AppShell({
             : 'Kullanıcı');
 
   /**
-   * Çıkış akışı: 'user' için önce deneyim anketi modalı, sonra logout; diğer
-   * kind'ler anketsiz doğrudan buraya gelir (answers hep undefined). Anket
-   * zorunlu değildir ("Atla ve çık") ve anket isteği hata verse bile çıkış
-   * TAMAMLANIR — geri bildirim toplamak oturum kapatmayı engellememeli.
+   * Zincir adım 1 → 2 geçişi: deneyim anketi modalı kapandı (gönder VEYA atla
+   * farketmez) → proje sonu anketi adımına geç. Deneyim yanıtları verildiyse
+   * mevcut davranış aynen korunur: logout'tan önce, token geçerliyken
+   * submitExitSurvey çağrılır; hata yutulur — anket çıkışı asla bloklamaz.
    */
-  async function finishLogout(answers?: ExitSurveyAnswers) {
-    setLoggingOut(true);
+  async function handleExperienceSurveyDone(answers?: ExitSurveyAnswers) {
     if (answers) {
+      // İstek sürerken butonları kilitle (çift gönderim olmasın); geçiş
+      // sonrası proje modalı serbest kalsın diye kilidi geri aç.
+      setLoggingOut(true);
       try {
         await api.submitExitSurvey(kind, answers);
+      } catch {
+        // Anket kaydedilemedi — sessizce geç, zinciri durdurma.
+      }
+      setLoggingOut(false);
+    }
+    setSurveyStep('proje');
+  }
+
+  /**
+   * Zincirin SON adımı — asıl çıkış. 'user' için buraya proje anketi adımından
+   * gelinir (projectAnswers gönderildiyse dolu); user-dışı kind'ler anketsiz
+   * DOĞRUDAN buraya gelir (projectAnswers hep undefined) — eski davranış aynen
+   * korunur. Anket isteği hata verse bile çıkış TAMAMLANIR — geri bildirim
+   * toplamak oturum kapatmayı engellememeli.
+   */
+  async function finishLogout(projectAnswers?: ProjectSurveyAnswers) {
+    setLoggingOut(true);
+    if (projectAnswers) {
+      try {
+        await api.submitProjectSurvey(kind, projectAnswers);
       } catch {
         // Anket kaydedilemedi — sessizce geç, çıkışı bloklama.
       }
@@ -543,7 +570,7 @@ export function AppShell({
       toast.push('error', 'Çıkış sırasında bir sorun oluştu.');
     } finally {
       setLoggingOut(false);
-      setSurveyOpen(false);
+      setSurveyStep(null);
     }
   }
 
@@ -631,11 +658,12 @@ export function AppShell({
             </Link>
             <button
               onClick={() => {
-                // NEDEN: Anket yalnız gerçek son-kullanıcı deneyimini ölçer;
-                // operasyonel roller (admin/danisman/arge/izleyici) anket
-                // doldurmasın → onlar için anketsiz doğrudan çıkış.
+                // NEDEN: Anket zinciri yalnız gerçek son-kullanıcı geri
+                // bildirimini toplar; operasyonel roller (admin/danisman/
+                // arge/izleyici) anket doldurmasın → onlar için anketsiz
+                // doğrudan çıkış.
                 if (kind === 'user') {
-                  setSurveyOpen(true);
+                  setSurveyStep('deneyim');
                 } else {
                   void finishLogout();
                 }
@@ -781,17 +809,27 @@ export function AppShell({
           tıklanınca izleyici token'ıyla hata veriyordu). */}
       {kind !== 'admin' && kind !== 'izleyici' && <SupportRequestButton kind={kind} />}
       <ChatWidget />
-      {/* Çıkış anketi YALNIZ 'user' kind'de render edilir — anket gerçek
-          son-kullanıcı deneyimini ölçer; operasyonel roller (admin/danisman/
-          arge/izleyici) çıkışta anket görmez (yukarıdaki Çıkış onClick'i de
-          onları doğrudan finishLogout'a yollar). */}
+      {/* Çıkış anket zinciri YALNIZ 'user' kind'de render edilir — anketler
+          gerçek son-kullanıcı geri bildirimini toplar; operasyonel roller
+          (admin/danisman/arge/izleyici) çıkışta anket görmez (yukarıdaki
+          Çıkış onClick'i de onları doğrudan finishLogout'a yollar).
+          surveyStep makinesi sırayı garanti eder: 'deneyim' → 'proje' → logout;
+          her iki modalda da gönder/atla seçimi zinciri İLERLETİR, durdurmaz. */}
       {kind === 'user' && (
-        <ExitSurveyModal
-          open={surveyOpen}
-          busy={loggingOut}
-          onSubmit={(answers) => void finishLogout(answers)}
-          onSkip={() => void finishLogout()}
-        />
+        <>
+          <ExitSurveyModal
+            open={surveyStep === 'deneyim'}
+            busy={loggingOut}
+            onSubmit={(answers) => void handleExperienceSurveyDone(answers)}
+            onSkip={() => void handleExperienceSurveyDone()}
+          />
+          <ProjectSurveyModal
+            open={surveyStep === 'proje'}
+            busy={loggingOut}
+            onSubmit={(answers) => void finishLogout(answers)}
+            onSkip={() => void finishLogout()}
+          />
+        </>
       )}
     </div>
   );

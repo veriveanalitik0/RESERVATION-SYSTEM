@@ -16,6 +16,16 @@ export interface ExitSurveyAnswers {
   comment?: string | null;
 }
 
+/**
+ * Proje sonu anketi yanıtları — serbest metin, tümü opsiyonel
+ * (backend trim sonrası max 4000 karakter kabul eder).
+ */
+export interface ProjectSurveyAnswers {
+  projectWork?: string;
+  labFeedback?: string;
+  improvement?: string;
+}
+
 export const authApi = {
   async login(email: string, password: string) {
     return request<{
@@ -120,6 +130,19 @@ export const authApi = {
    */
   async submitExitSurvey(kind: SubjectKind, answers: ExitSurveyAnswers) {
     return request<{ saved: boolean }>('/auth/exit-survey', {
+      method: 'POST',
+      body: answers,
+      kind,
+    });
+  },
+
+  /**
+   * Proje sonu anketi yanıtı — logout'tan ÖNCE, token hâlâ geçerliyken
+   * çağrılır. Tüm alanlar opsiyonel serbest metin; hepsi boşsa backend kayıt
+   * yazmaz ({saved:false}).
+   */
+  async submitProjectSurvey(kind: SubjectKind, answers: ProjectSurveyAnswers) {
+    return request<{ saved: boolean }>('/auth/project-survey', {
       method: 'POST',
       body: answers,
       kind,

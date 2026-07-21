@@ -27,7 +27,7 @@ import { profileApi } from './api/profile';
 export { clearCsrfCache, subscribeEvents } from './api/core';
 export type { SseSubscription } from './api/core';
 export type { LicenseRequestPayload } from './api/licenses';
-export type { ExitSurveyAnswers } from './api/auth';
+export type { ExitSurveyAnswers, ProjectSurveyAnswers } from './api/auth';
 
 /* ============================================================
  * API client object — alan modüllerinin düz birleşimi.

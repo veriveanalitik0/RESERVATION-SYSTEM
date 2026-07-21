@@ -3,6 +3,9 @@
  *
  * UI: ay görünümü + agenda (yan yana, mobilde stacked). Bir güne tıklandığında
  * o günün randevuları + onaylı booking'lerden birine yeni randevu ekleme aksiyonu.
+ * Takvimde YALNIZ onaylı dönemler görünür — bekleyen talepler bilinçli olarak
+ * gösterilmez (iş kuralı: tarihler onaylanınca takvime düşer; kullanıcı kararı,
+ * 2026-07-21). Bekleyen taleplerin takibi Taleplerim sayfasındadır.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppShell } from '../components/AppShell';
@@ -13,6 +16,7 @@ import { useToast } from '../components/Toast';
 import { useRealtimeEvents } from '../hooks/useRealtimeEvents';
 import { api } from '../services/api';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { UpcomingVisitCard, computeNextVisit } from '../components/UpcomingVisitCard';
 import type { Appointment, Booking } from '../types';
 
 /* ============ Tarih yardımcıları ============ */
@@ -73,6 +77,36 @@ function buildMonthGrid(anchor: Date): { date: Date; inMonth: boolean }[] {
     if (i >= 27 && d > last && weekdayMon(d) === 6) break; // gereksiz haftaları kes
   }
   return cells;
+}
+
+/**
+ * Verilen booking listesinin tarih aralıklarının grid günleriyle kesişimi.
+ * Sadece görünen ~42 hücre taranır; 'YYYY-MM-DD' string karşılaştırması
+ * (start <= gün <= end) aralık testine yeter. isStart/isEnd, komşu günün
+ * kapsanıp kapsanmadığına bakarak şeridin uçlarını yuvarlatmak için.
+ */
+function buildRangeDays(
+  list: Booking[],
+  cells: { date: Date; inMonth: boolean }[]
+): Map<string, { bookings: Booking[]; isStart: boolean; isEnd: boolean }> {
+  const m = new Map<string, { bookings: Booking[]; isStart: boolean; isEnd: boolean }>();
+  if (list.length === 0) return m;
+  const covers = (key: string) => list.some((b) => b.startDate <= key && b.endDate >= key);
+  for (const { date } of cells) {
+    const key = ymd(date);
+    const covering = list.filter((b) => b.startDate <= key && b.endDate >= key);
+    if (covering.length === 0) continue;
+    const prev = new Date(date);
+    prev.setDate(date.getDate() - 1);
+    const next = new Date(date);
+    next.setDate(date.getDate() + 1);
+    m.set(key, {
+      bookings: covering,
+      isStart: !covers(ymd(prev)),
+      isEnd: !covers(ymd(next)),
+    });
+  }
+  return m;
 }
 
 export default function UserCalendar() {
@@ -147,33 +181,17 @@ export default function UserCalendar() {
     [bookings]
   );
 
-  // Onaylı booking aralıklarının grid günleriyle kesişimi (yeşil bloklar).
-  // Sadece görünen ~42 hücre taranır; 'YYYY-MM-DD' string karşılaştırması
-  // (start <= gün <= end) aralık testine yeter. isStart/isEnd, komşu günün
-  // kapsanıp kapsanmadığına bakarak bloğun uçlarını yuvarlatmak için.
-  const bookingDays = useMemo(() => {
-    const m = new Map<string, { bookings: Booking[]; isStart: boolean; isEnd: boolean }>();
-    if (approvedBookings.length === 0) return m;
-    const covers = (key: string) =>
-      approvedBookings.some((b) => b.startDate <= key && b.endDate >= key);
-    for (const { date } of cells) {
-      const key = ymd(date);
-      const covering = approvedBookings.filter(
-        (b) => b.startDate <= key && b.endDate >= key
-      );
-      if (covering.length === 0) continue;
-      const prev = new Date(date);
-      prev.setDate(date.getDate() - 1);
-      const next = new Date(date);
-      next.setDate(date.getDate() + 1);
-      m.set(key, {
-        bookings: covering,
-        isStart: !covers(ymd(prev)),
-        isEnd: !covers(ymd(next)),
-      });
-    }
-    return m;
-  }, [approvedBookings, cells]);
+  // Onaylı aralıkların grid günleriyle kesişimi (yeşil şeritler).
+  const bookingDays = useMemo(
+    () => buildRangeDays(approvedBookings, cells),
+    [approvedBookings, cells]
+  );
+
+  // "Yaklaşan ziyaret" kartı — randevu > onaylı dönem başlangıcı.
+  const nextVisit = useMemo(
+    () => computeNextVisit(appointments, bookings),
+    [appointments, bookings]
+  );
 
   async function submitAppointment(payload: {
     bookingId: string;
@@ -257,6 +275,19 @@ export default function UserCalendar() {
           </button>
         </div>
       </div>
+
+      {/* Yaklaşan ziyaret — en yakın gelecekteki gün belirgin kartla öne çıkar. */}
+      {!loading && nextVisit && (
+        <UpcomingVisitCard
+          visit={nextVisit}
+          onShowDate={(date) => {
+            // Karttaki güne odaklan: ay görünümünü o aya çevir + günü seç.
+            const d = new Date(`${date}T00:00:00`);
+            setAnchor(startOfMonth(d));
+            setSelectedDate(startOfDay(d));
+          }}
+        />
+      )}
 
       {loading ? (
         <div className="card p-10 text-center text-kt-gray-500">Yükleniyor…</div>

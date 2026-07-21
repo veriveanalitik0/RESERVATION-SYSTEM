@@ -16,11 +16,13 @@ import {
   exitSurveySchema,
   forgotPasswordSchema,
   loginSchema,
+  projectSurveySchema,
   refreshSchema,
   registerSchema,
   resetPasswordSchema,
 } from '../validators/schemas';
 import { recordExitSurvey } from '../services/exit-survey.service';
+import { recordProjectSurvey } from '../services/project-survey.service';
 import {
   unifiedLogin,
   registerUser,
@@ -342,6 +344,32 @@ router.post(
       const input = exitSurveySchema.parse(req.body);
       const auth = req.auth!;
       const { saved } = await recordExitSurvey(auth.subjectId, auth.subjectType, input);
+      res.status(saved ? 201 : 200).json({ saved });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
+ * Proje sonu anketi — 3 açık uçlu soruyla projenin ve deneyimin anlatıldığı anket.
+ *
+ * ŞİMDİLİK çıkış akışında gösteriliyor (İLERİDE proje tamamlanma akışına
+ * taşınacak); bu yüzden /exit-survey ile aynı sözleşme geçerli: logout'tan
+ * ÖNCE çağrılır, zorunlu değildir ("Atla" → istek atılmaz), kayıt BAŞARISIZ
+ * olsa bile çıkış engellenmemeli — frontend hatayı yutar ve logout'a devam eder.
+ * requireAnySubject bilinçli: exit-survey ile simetri korunur; UI zaten
+ * user-dışı rollere anketi göstermiyor.
+ */
+router.post(
+  '/project-survey',
+  csrfProtection,
+  requireAnySubject,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const input = projectSurveySchema.parse(req.body);
+      const auth = req.auth!;
+      const { saved } = await recordProjectSurvey(auth.subjectId, auth.subjectType, input);
       res.status(saved ? 201 : 200).json({ saved });
     } catch (err) {
       next(err);
